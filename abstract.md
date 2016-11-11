@@ -1,5 +1,3 @@
-_Abstracts are structured with a standard layout such that the text is divided into sub-sections under the following five headings: Motivation, Results, Availability and Implementation, Contact and Supplementary Information. In cases where authors feel the headings inappropriate, some flexibility is allowed. The abstracts should be succinct and contain only material relevant to the headings. A maximum of 150 words is recommended. If internet hyperlinks are available for any part of the abstract, then this should be given in the form of 'clickable text', i.e.{{http://www...}}._
-
 **Motivation**
 _This section should specifically state the scientific question within the context of the field of study._
 
