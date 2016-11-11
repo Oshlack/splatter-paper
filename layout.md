@@ -2,7 +2,7 @@ abstract.md
 introduction.md
 The_Splatter_framework_Consistent_interface__.md
 The_Splat_simulation_Simulation_model__.md
-Comparison_of_simulations__.md
+Comparison_of_simulations_Other_simulations__.md
 Evaluation_of_visualisation_clustering_lineage__.md
 conclusion.md
 Acknowledgements__.md
