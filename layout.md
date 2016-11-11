@@ -2,6 +2,7 @@ abstract.md
 introduction.md
 The_Splatter_framework__.md
 The_Splat_simulation__.md
+Comparison_of_simulations__.md
 results.md
 conclusion.md
 Acknowledgements__.md
