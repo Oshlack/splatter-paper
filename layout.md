@@ -1,6 +1,6 @@
 abstract.md
 introduction.md
-The_Splatter_framework__.md
+The_Splatter_framework_Consistent_interface__.md
 The_Splat_simulation__.md
 Comparison_of_simulations__.md
 Evaluation_of_visualisation_clustering_lineage__.md
