@@ -1,6 +1,7 @@
 # Introduction
 
 * scRNA-seq is a rapidly developing area
+* Difference focus
 * Various challenges
 * Many new methods being developed
 * Need to be able to show:
