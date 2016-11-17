@@ -3,9 +3,9 @@
         Name & Symbol & Description & Equation \\
         Original gene mean & $\lambda^{'}_i$ & Original mean expression for gene $i$ & $\sim Gamma(\alpha, \beta)$\\
         Outlier indicator & $1^{O}_i$ & Whether gene $i$ is an expression outlier & $\sim Ber(\pi^{O})$\\ 
-        Outlier direction & $\delta_i$ & Whether outlier gene $i$ is highly ($1$) or lowly ($-1$) expressed & $\sim (-1)^{Ber(\pi^{LO})}$\\
+        Outlier direction & $\delta_i$ & Whether outlier gene $i$ is highly ($1$) or lowly ($-1$) expressed & $(-1)^{\sim Ber(\pi^{LO})}$\\
         Base outlier factor & $\psi^{'}_i$ & Factor for outlier gene $i$ before considering direction & $\sim \ln \mathcal{N}(\mu^{O}, \sigma^{O})$\\
-        Outlier factor & $\psi_i$ & Factor for outlier gene $i$ & \\
+        Outlier factor & $\psi_i$ & Factor for outlier gene $i$ & $1^{O}_i({\psi^{'}_i}^{\delta_i}) + (1 - 1^{O}_i)$\\
         Gene mean & $\lambda_i$ & Mean expression for gene $i$ after applying outlier factors & \\
         Expected library size & $L_j$ & Library size for cell $j$ & \\
         Cell mean & $\lambda^{'}_{i,j}$ & Mean expression for gene $i$ in cell $j$ & \\
