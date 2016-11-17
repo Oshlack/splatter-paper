@@ -1,9 +1,5 @@
 # The Splat simulation
 
-## Simulating groups
-
-* Differential expression
-
 ## Simulating paths
 
 * End points (DE)
