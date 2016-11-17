@@ -1,0 +1,1 @@
+Splatter contains several simulation models, one of which we have designed ourselves. We refer to this model as the "Splat" simulation in order to differentiate it from "Splatter" which is the package as a whole.
