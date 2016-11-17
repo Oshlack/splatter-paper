@@ -11,7 +11,7 @@
         BCV & $B_{i,j}$ & Biological coefficient of variation for gene $i$ in cell $j$ & $(\phi + 1 / \sqrt{\lambda^{'}_{i,j}})(df \sim \chi^2(df))^{1/2}$ \\
         Trended cell mean & $\lambda_{i,j}$ & Mean expression for gene $i$ in cell $j$ after applying BCV & $\sim Gamma(1 / B_i^2, \lambda^{'}_{i,j}B_i^{2})$\\
         True count & $Y^{'}_{i,j}$ & True simulated count for gene $i$ in cell $j$ & $\sim Poi(\lambda_{i,j})$\\
-        Dropout value & $\eta_{i,j}$ & Value provided to dropout logistic function for gene $i$ in cell $j$ & \\
+        Dropout value & $\eta_{i,j}$ & Value provided to dropout logistic function for gene $i$ in cell $j$ & $(L_j / Med(L_j))(\log(\lambda_{i,j}))$\\
         Dropout probability & $\pi^{D}_{i,j}$ & Probability that gene $i$ in cell $j$ will be kept & $1 / (1 + \exp(-k(\eta_{i,j} - x_0))$\\
         Dropout indicator & $1^{D}_{i,j}$ & Whether gene $i$ in cell $j$ has been kept & $\sim Ber(\pi^{D}_{i,j})$\\
         Count & $Y_{i,j}$ & Final simulated count for gene $i$ in cell $j$ after dropout & $1^{D}_{i,j}Y^{'}_{i,j}$\\
