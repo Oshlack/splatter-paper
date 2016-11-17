@@ -1,13 +1,5 @@
 # The Splat simulation
 
-## Parameter estimation
-
-* Means
-* Library sizes
-* Expression outliers
-* BCV
-* Dropout
-
 ## Simulating groups
 
 * Differential expression
