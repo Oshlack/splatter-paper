@@ -13,9 +13,9 @@
         Trended cell mean & $\lambda_{i,j}$ & Mean expression for gene $i$ in cell $j$ after applying BCV & $\sim Gamma(1 / B_i^2, \lambda^{'}_{i,j}B_i^{2})$\\
         True count & $Y^{'}_{i,j}$ & True simulated count for gene $i$ in cell $j$ & $\sim Poi(\lambda_{i,j})$\\
         Dropout value & $\eta_{i,j}$ & Value provided to dropout logistic function for gene $i$ in cell $j$ & \\
-        Dropout probability & $\pi^{D}_{i,j}$ & Probability that gene $i$ in cell $j$ will be dropped & $1 / (1 + \exp(-k(\eta_{i,j} - x_0))$\\
-        Dropout indicator & $1^{D}_{i,j}$ & Whether gene $i$ in cell $j$ has been dropped & \\
-        Count & $Y_{i,j}$ & Final simulated count for gene $i$ in cell $j$ after dropout & \\
+        Dropout probability & $\pi^{D}_{i,j}$ & Probability that gene $i$ in cell $j$ will be kept & $1 / (1 + \exp(-k(\eta_{i,j} - x_0))$\\
+        Dropout indicator & $1^{D}_{i,j}$ & Whether gene $i$ in cell $j$ has been kept & $\sim Ber(\pi^{D}_{i,j})$\\
+        Count & $Y_{i,j}$ & Final simulated count for gene $i$ in cell $j$ after dropout & $1^{D}_{i,j}Y^{'}_{i,j}$\\
     \end{tabular} 
     \caption{Intermediate parameters in the Splat simulation model} 
 \end{table}
