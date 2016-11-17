@@ -1,5 +1,6 @@
 \begin{table} 
-    \begin{tabular}{ l c l c }
+    \caption{Intermediate parameters in the Splat simulation model}
+    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}p{0.2\linewidth}p{0.1\linewidth}p{0.4\linewidth}p{0.2\linewidth}@{}}
         Name & Symbol & Description & Equation \\
         Original gene mean & $\lambda^{'}_i$ & Original mean expression for gene $i$ & $\sim Gamma(\alpha, \beta)$\\
         Outlier indicator & $1^{O}_i$ & Whether gene $i$ is an expression outlier & $\sim Ber(\pi^{O})$\\ 
@@ -16,5 +17,4 @@
         Dropout indicator & $1^{D}_{i,j}$ & Whether gene $i$ in cell $j$ has been kept & $\sim Ber(\pi^{D}_{i,j})$\\
         Count & $Y_{i,j}$ & Final simulated count for gene $i$ in cell $j$ after dropout & $1^{D}_{i,j}Y^{'}_{i,j}$\\
     \end{tabular} 
-    \caption{Intermediate parameters in the Splat simulation model} 
 \end{table}
