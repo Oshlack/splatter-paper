@@ -1,0 +1,13 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Rmarkdown output
+analysis/cache
+analysis/figures
+analysis/docs
+analysis/*.html
+
+# Output files
+output
