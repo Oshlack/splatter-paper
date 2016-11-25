@@ -31,6 +31,7 @@ library("splatter")
 
 # Plotting
 library("mcriPalettes")
+library("cowplot")
 
 library("tidyverse")
 ```
@@ -41,10 +42,10 @@ source("../R/add_stats.R")
 ```
 
 ```{r ggtheme, cache = FALSE}
-theme_doc <- ggplot2::theme_minimal(base_size = 18) +
-             ggplot2::theme(panel.grid = ggplot2::element_blank(),
-                            plot.title = ggplot2::element_text(size = 30))
-ggplot2::theme_set(theme_doc)
+#theme_doc <- ggplot2::theme_minimal(base_size = 18) +
+#             ggplot2::theme(panel.grid = ggplot2::element_blank(),
+#                            plot.title = ggplot2::element_text(size = 30))
+#ggplot2::theme_set(theme_doc)
 
 my.pal <- mcriPalettes::mcriPalette("themes")
 my.pal[4] <- "#F7DC5F"
@@ -103,9 +104,7 @@ sim.desc <- "Splatter simulation"
 params <- splatEstimate(real)
 sim <- splatSimulate(params, dropout.present = FALSE, seed = 1)
 sim <- calculateQCMetrics(sim)
-```
 
-```{r add-splatter}
 datasets[[sim.name]] <- sim
 descrips[[sim.name]] <- sim.desc
 ```
@@ -117,9 +116,7 @@ sim.desc <- "Simple negative-binomial"
 params <- simpleEstimate(real)
 sim <- simpleSimulate(params, seed = 1)
 sim <- calculateQCMetrics(sim)
-```
 
-```{r add-simple}
 datasets[[sim.name]] <- sim
 descrips[[sim.name]] <- sim.desc
 ```
@@ -131,9 +128,7 @@ sim.desc <- "Negative-binomial with cell factors"
 params <- lunEstimate(real)
 sim <- lunSimulate(params, seed = 1)
 sim <- calculateQCMetrics(sim)
-```
 
-```{r add-lun}
 datasets[[sim.name]] <- sim
 descrips[[sim.name]] <- sim.desc
 ```
@@ -146,9 +141,7 @@ params <- lun2Estimate(real, plates = factor(pData(real)$replicate),
                        min.size = 50)
 sim <- lun2Simulate(params, seed = 1)
 sim <- calculateQCMetrics(sim)
-```
 
-```{r add-lun2}
 datasets[[sim.name]] <- sim
 descrips[[sim.name]] <- sim.desc
 ```
@@ -163,9 +156,7 @@ sim <- scDDSimulate(params, nCells = round(ncol(real) / 2), nDE = 0, nDP = 0,
                     nDM = 0, nDB = 0, nEE = nrow(real) / 2,
                     nEP = nrow(real) / 2, seed = 1)
 sim <- calculateQCMetrics(sim)
-```
 
-```{r add-scDD}
 datasets[[sim.name]] <- sim
 descrips[[sim.name]] <- sim.desc
 ```
@@ -181,142 +172,97 @@ details  <- data.frame(Dataset     = names(descrips),
 knitr::kable(details, row.names = FALSE)
 ```
 
-```{r combine}
-fData.long <- mutate(fData(real), dataset = real.name)
-pData.long <- mutate(pData(real), dataset = real.name)
-
-for (sim.name in names(datasets)[-1]) {
-    sim <- datasets[[sim.name]]
-    cpm(sim) <- edgeR::cpm(counts(sim))
-    sim <- addGeneStats(sim, "counts")
-    sim <- addGeneStats(sim, "cpm")
-    sim <- addGeneStats(sim, "cpm", log = TRUE)
-    sim <- addIsZeroOutlier(sim)
-    fData.long <- bind_rows(fData.long,
-                            {fData(sim) %>% mutate(dataset = sim.name)})
-    pData.long <- bind_rows(pData.long,
-                            {pData(sim) %>% mutate(dataset = sim.name)})
-}
-
-fData.long <- mutate(fData.long,
-                     dataset = factor(dataset, levels = names(datasets)))
-pData.long <- mutate(pData.long,
-                     dataset = factor(dataset, levels = names(datasets)))
-
-saveRDS(fData.long, file = "../output/fData_long.Rds")
-saveRDS(pData.long, file = "../output/pData_long.Rds")
+```{r output-datasets}
+write_rds(datasets, "../output/datasets.Rds")
 ```
 
 Comparison
 ==========
 
+```{r compare}
+comp <- compareSCESets(datasets)
+
+comp$FeatureData$Dataset <- factor(comp$FeatureData$Dataset,
+                                   levels = names(datasets))
+comp$PhenoData$Dataset <- factor(comp$PhenoData$Dataset,
+                                 levels = names(datasets))
+```
+
+```{r output-compare}
+write_rds(comp, "../output/comparison.Rds")
+```
+
 Means
 -----
 
 ```{r means}
-ggplot(fData.long, aes(x = dataset, y = mean_log_cpm, colour = dataset)) +
-    geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), size = 1.5) +
-    scale_color_manual(values = my.pal) +
-    ylab(expression(paste("Mean ", log[2], "(CPM + 1)"))) +
-    ggtitle("Distribution of mean expression") +
-    theme(legend.position = "none",
-          axis.title.x = element_blank())
-
+comp$Plots$Means
 ```
 
 Variances
 ---------
 
 ```{r variances}
-ggplot(fData.long, aes(x = dataset, y = var_cpm, colour = dataset)) +
-    geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), size = 1.5) +
-    scale_y_log10(labels = scales::comma) +
-    scale_color_manual(values = my.pal) +
-    ylab("CPM Variance") +
-    ggtitle("Distribution of variance") +
-    theme(legend.position = "none",
-          axis.title.x = element_blank())
+comp$Plots$Variances
 ```
 
-Mean-Variance
+Mean-variance
 -------------
 
 ```{r mean-var}
-ggplot(fData.long, aes(x = mean_log_cpm, y = var_log_cpm,
-                       colour = dataset, fill = dataset)) +
-    geom_point(size = 0.5, alpha = 0.1) +
-    geom_smooth() +
-    scale_color_manual(values = my.pal, name = "Dataset") +
-    scale_fill_manual(values = my.pal, name = "Dataset") +
-    xlab(expression(paste("Mean ", log[2], "(CPM + 1)"))) +
-    ylab(expression(paste("Variance ", log[2], "(CPM + 1)"))) +
-    ggtitle("Mean-variance relationship")
-```
-
-```{r mean-var-simple}
-ggplot(fData.long, aes(x = mean_log_cpm, y = var_log_cpm,
-                       colour = dataset, fill = dataset)) +
-    geom_smooth() +
-    scale_color_manual(values = my.pal, name = "Dataset") +
-    scale_fill_manual(values = my.pal, name = "Dataset") +
-    xlab(expression(paste("Mean ", log[2], "(CPM + 1)"))) +
-    ylab(expression(paste("Variance ", log[2], "(CPM + 1)"))) +
-    ggtitle("Mean-variance relationship") +
-    theme(legend.position = "none")
-
-```
-
-```{r mean-var-simple-legend}
-ggplot(fData.long, aes(x = mean_log_cpm, y = var_log_cpm,
-                       colour = dataset, fill = dataset)) +
-    geom_smooth() +
-    scale_color_manual(values = my.pal, name = "Dataset") +
-    scale_fill_manual(values = my.pal, name = "Dataset") +
-    xlab(expression(paste("Mean ", log[2], "(CPM + 1)"))) +
-    ylab(expression(paste("Variance ", log[2], "(CPM + 1)"))) +
-    ggtitle("Mean-variance relationship") +
-    theme(legend.position = "right")
-
+comp$Plots$MeanVar
 ```
 
 Library size
 ------------
 
 ```{r lib-size}
-ggplot(pData.long, aes(x = dataset, y = total_counts, colour = dataset)) +
-    geom_boxplot(size = 1.5) +
-    scale_y_continuous(labels = scales::comma) +
-    scale_color_manual(values = my.pal) +
-    ylab("Total counts per cell") +
-    ggtitle("Distribution of library sizes") +
-    theme(legend.position = "none",
-          axis.title.x = element_blank())
+comp$Plots$LibrarySizes
+```
+
+Zeros (genes)
+-------------
+
+```{r zero-gene}
+comp$Plots$ZerosGene
+```
+
+Zeros (cells)
+-------------
+
+```{r zero-cell}
+comp$Plots$ZerosCell
+```
+
+Combined
+--------
+
+```{r combine}
+p1 <- comp$Plots$Means + theme(legend.position = "none",
+                               axis.title.x = element_blank())
+p2 <- comp$Plots$Variances + theme(legend.position = "none",
+                               axis.title.x = element_blank())
+p3 <- comp$Plots$MeanVar + theme(legend.position = "none")
+p4 <- comp$Plots$LibrarySizes + theme(legend.position = "none",
+                               axis.title.x = element_blank())
+p5 <- comp$Plots$ZerosGene + theme(legend.position = "none",
+                               axis.title.x = element_blank())
+p6 <-  comp$Plots$ZerosCell + theme(legend.position = "none",
+                               axis.title.x = element_blank())
+leg <- get_legend(p1 + theme(legend.position = "bottom"))
+```
+
+```{r plot-combined}
+comb.plt <- plot_grid(p1, p2, p3, p4, p5, p6, align = "v", ncol = 2,
+                      labels = "AUTO")
+panel <- plot_grid(comb.plt, leg, ncol = 1, rel_heights = c(1, .05))
+panel
+```
+
+```{r output-combined}
 
 ```
 
-Zeros
------
-
-```{r zeros-gene}
-ggplot(fData.long, aes(x = dataset, y = pct_dropout, colour = dataset)) + 
-    geom_boxplot(size = 1.5) +
-    scale_color_manual(values = my.pal) +
-    ylab("Percentage zeros per gene") +
-    ggtitle("Distribution of zeros per gene") +
-    theme(legend.position = "none",
-          axis.title.x = element_blank())
-```
-
-```{r zeros-cell}
-ggplot(pData.long, aes(x = dataset, y = pct_dropout, colour = dataset)) +
-    geom_boxplot(size = 1.5) +
-    scale_y_continuous(limits = c(0, 100)) +
-    scale_color_manual(values = my.pal) +
-    ylab("Percentage zeros per cell") +
-    ggtitle("Distribution of zeros per cell") +
-    theme(legend.position = "none",
-          axis.title.x = element_blank())
-```
 
 Different situations
 ==================
@@ -334,7 +280,6 @@ data.frame(PC1 = reducedDimension(sim.single)[, 1],
            PC2 = reducedDimension(sim.single)[, 2]) %>%
     ggplot(aes(x = PC1, y = PC2)) +
     geom_point(size = 4, colour = "#092F5E")
-
 ```
 
 Groups
