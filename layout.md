@@ -21,7 +21,7 @@ Simulating_paths_End_points_DE__.md
 An_alternative_situation_that_is__.md
 Comparison_of_simulations_Other_simulations__.md
 As_well_as_our_own__.md
-figures/sim_comparison/sim_comparison.png
+figures/sim_comparison/sim_comparison (2).png
 Evaluation_of_visualisation_clustering_lineage__.md
 conclusion.md
 Acknowledgements__.md
