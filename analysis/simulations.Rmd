@@ -260,9 +260,8 @@ panel
 ```
 
 ```{r output-combined}
-
+save_plot("../output/sim_comparison.pdf", panel, ncol = 2, nrow = 3)
 ```
-
 
 Different situations
 ==================
