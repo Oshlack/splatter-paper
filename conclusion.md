@@ -9,4 +9,4 @@
 * Splat simulation
   * Features
   * Independent of method
-  * Simualte groups/paths
+  * Simulate groups/paths
