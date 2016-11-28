@@ -1,1 +1,1 @@
-# Evaluation of visualisation/clustering/lineage tracing?
+# Example evaluation of clustering method
