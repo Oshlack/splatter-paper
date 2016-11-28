@@ -24,6 +24,7 @@ As_well_as_our_own__.md
 figures/sim_comparison/sim_comparison (2).png
 Comparison_of_different_simulation_methods__.md
 Evaluation_of_visualisation_clustering_lineage__.md
+figures/clustering_results/clustering_results.png
 conclusion.md
 Simulated_datasets_are_a_useful__.md
 Acknowledgements__.md
