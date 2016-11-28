@@ -1,1 +1,1 @@
-Replace this text with your caption
+Comparison of different simulation methods as returned by Splatter's comparison function. The Tung dataset (orange) is the real data on which the simulations were based. Panel A shows the distribution of mean expression as a violin plot with the lower quartile, median and upper quartile marked as lines. Panel B shows a similar plot of gene variances. Panel C shows the relationship between mean and variance. In panel D we see a boxplot of library size. The remaining two panels show the percentage of zeros in each gene (E) or cell (F).
