@@ -1,0 +1,251 @@
+---
+title: "Clustering"
+author: "Luke Zappia"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+Code version: `r system("git log -1 --format=oneline | cut -d' ' -f1", intern = TRUE)`
+
+```{r knitr, include = FALSE}
+DOCNAME = "clustering"
+knitr::opts_chunk$set(autodep        = TRUE,
+                      cache          = TRUE,
+                      cache.path     = paste0("cache/", DOCNAME, "/"),
+                      cache.comments = TRUE,
+                      echo           = FALSE,
+                      error          = FALSE,
+                      fig.align      = "center",
+                      fig.path       = paste0("figures/", DOCNAME, "/"),
+                      fig.width      = 10,
+                      fig.height     = 8,
+                      dev            = c('svg', 'png'),
+                      message        = FALSE,
+                      warning        = FALSE)
+```
+
+```{r libraries}
+# RNA-seq
+library("splatter")
+library("SC3")
+
+# Evaluation
+library("clues")
+library("ROCR")
+
+# Data manipulation
+library("magrittr")
+
+# Plotting
+library("cowplot")
+
+# Tidyverse
+library("tidyverse")
+```
+
+```{r source, cache = FALSE}
+source("../R/load.R")
+source("../R/add_stats.R")
+```
+
+Introduction
+============
+
+In this document we are going to demonstrate how you might use a Splatter
+simulation to evaluate a clustering method. We are going to simulate
+a dataset using the Splat simulate, run the SC3 clustering method and
+evaluate the results.
+
+Data
+====
+
+The simulation will take parameters from the same Tung dataset used when
+comparing simulations.
+
+```{r real}
+real <- loadTung(count = "molecules", version = "filter",
+                 individual = "NA19239", remove.ercc = TRUE)
+```
+
+```{r estimate}
+params <- splatEstimate(real)
+```
+
+```{r simulate}
+sims <- lapply(1:20, function(seed) {
+    message("Simulating ", seed)
+    sim <- splatSimulateGroups(params,
+                           groupCells = rep(100, 3),
+                           de.prob = 0.01,
+                           de.facLoc = 0.1,
+                           de.facScale = 0.5,
+                           dropout.present = FALSE,
+                           seed = seed)
+    sim <- calculateQCMetrics(sim)
+    return(sim)
+})
+```
+
+SC3
+===
+
+```{r sc3}
+sc3s <- lapply(1:length(sims), function(i) {
+    message("Running SC3 ", i)
+    sim <- sims[[i]]
+    sc3 <- sc3_prepare(sim)
+    sc3 <- sc3_estimate_k(sc3)
+    sc3 <- sc3_set_ks(sc3, ks = 3)
+    sc3 <- sc3_calc_dists(sc3)
+    sc3 <- sc3_calc_transfs(sc3)
+    sc3 <- sc3_kmeans(sc3)
+    sc3 <- sc3_calc_consens(sc3)
+    sc3 <- sc3_calc_biology(sc3)
+    sc3 <- sc3_summarise_results(sc3, k = 3)
+    return(sc3)
+})
+```
+
+```{r evaluate}
+metrics <- sapply(1:length(sc3s), function(run) {
+    
+    sc3 <- sc3s[[run]]
+    
+    truth <- as.numeric(factor(pData(sc3)$Group))
+    predicted <- pData(sc3)$sc3_clusters
+    clust.metrics <- adjustedRand(truth, predicted)
+    
+    gene.metrics <- fData(sc3) %>%
+        mutate(DE_True = (DEFacGroup1 != 1) | (DEFacGroup2 != 1) |
+                   (DEFacGroup3 != 1)) %>%
+        mutate(DE_Predicted = Gene %in% rownames(sc3@sc3$results$de_genes)) %>%
+        mutate(DE_TP = DE_True & DE_Predicted) %>%
+        mutate(DE_TN = !DE_True & !DE_Predicted) %>%
+        mutate(DE_FP = !DE_True & DE_Predicted) %>%
+        mutate(DE_FN = DE_True & !DE_Predicted) %>%
+        mutate(Mk_True = ((DEFacGroup1 != 1) + (DEFacGroup2 != 1) +
+                   (DEFacGroup3 != 1)) == 1) %>%
+        mutate(Mk_Predicted = Gene %in% rownames(sc3@sc3$results$markers)) %>%
+        mutate(Mk_TP = Mk_True & Mk_Predicted) %>%
+        mutate(Mk_TN = !Mk_True & !Mk_Predicted) %>%
+        mutate(Mk_FP = !Mk_True & Mk_Predicted) %>%
+        mutate(Mk_FN = Mk_True & Mk_Predicted) %>%
+        select(starts_with("DE_"), starts_with("Mk_")) %>%
+        summarise_each(funs(sum)) %>%
+        mutate(DE_Accuracy = (DE_TP + DE_TN) / nrow(sc3)) %>%
+        mutate(DE_Recall = DE_TP / DE_True) %>%
+        mutate(DE_Precision = DE_TP / (DE_TP + DE_FP)) %>%
+        mutate(DE_F1 = 2 * ((DE_Precision * DE_Recall) /
+                                (DE_Precision + DE_Recall))) %>%
+        mutate(Mk_Accuracy = (Mk_TP + Mk_TN) / nrow(sc3)) %>%
+        mutate(Mk_Recall = Mk_TP / Mk_True) %>%
+        mutate(Mk_Precision = Mk_TP / (Mk_TP + Mk_FP)) %>%
+        mutate(Mk_F1 = 2 * ((Mk_Precision * Mk_Recall) /
+                                (Mk_Precision + Mk_Recall))) %>%
+        select(starts_with("DE_"), starts_with("Mk_")) %>%
+        unlist() 
+    
+    return(c(Run = run, clust.metrics, gene.metrics))
+})
+
+metrics <- data.frame(t(metrics))
+```
+
+```{r output-metrics}
+write_tsv(metrics, "../output/metrics.tsv")
+```
+
+```{r cluster-plot}
+p1 <- metrics %>%
+    select(1:6) %>%
+    gather("Metric", "Value", 2:6) %>%
+    mutate(Metric = factor(Metric, c("Rand", "HA", "MA", "FM", "Jaccard"))) %>%
+    ggplot(aes(x = Metric, y = Value)) +
+    geom_boxplot(colour = "#66C2A5", fill = "#66C2A5", size = 2,
+                 outlier.size = 3, alpha = 0.4) +
+    ggtitle("Clustering metrics") +
+    theme_minimal(base_size = 16) +
+    theme(axis.title.x = element_blank())
+p1
+```
+
+```{r de-plot}
+metrics %>%
+    select(Run, Accuracy = DE_Accuracy, Recall = DE_Recall,
+           Precision = DE_Precision, F1 = DE_F1) %>%
+    gather("Metric", "Value", 2:5) %>%
+    mutate(Metric = factor(Metric, c("Accuracy", "Recall", "Precision",
+                                     "F1"))) %>%
+    ggplot(aes(x = Metric, y = Value)) +
+    geom_boxplot(colour = "#FC8D62", fill = "#FC8D62", size = 2,
+                 outlier.size = 3, alpha = 0.4) +
+    ggtitle("Differential expression metrics") +
+    theme_minimal(base_size = 16)
+```
+
+```{r marker-plot}
+metrics %>%
+    select(Run, Accuracy = Mk_Accuracy, Recall = Mk_Recall,
+           Precision = Mk_Precision, F1 = Mk_F1) %>%
+    gather("Metric", "Value", 2:5) %>%
+    mutate(Metric = factor(Metric, c("Accuracy", "Recall", "Precision",
+                                     "F1"))) %>%
+    ggplot(aes(x = Metric, y = Value)) +
+    geom_boxplot(colour = "#8DA0CB", fill = "#8DA0CB", size = 2,
+                 outlier.size = 3, alpha = 0.4) +
+    ggtitle("Marker gene metrics") +
+    theme_minimal(base_size = 16)
+```
+
+```{r genes-plot}
+p2 <- metrics %>%
+    select(Run, Accuracy = DE_Accuracy, Recall = DE_Recall,
+           Precision = DE_Precision, F1 = DE_F1) %>%
+    gather("Metric", "Value", 2:5) %>%
+    mutate(Metric = factor(Metric, c("Accuracy", "Recall", "Precision",
+                                     "F1"))) %>%
+    mutate(Type = "DE") %>%
+    bind_rows(metrics %>%
+                  select(Run, Accuracy = Mk_Accuracy, Recall = Mk_Recall,
+                         Precision = Mk_Precision, F1 = Mk_F1) %>%
+                  gather("Metric", "Value", 2:5) %>%
+                  mutate(Metric = factor(Metric, c("Accuracy", "Recall",
+                                                   "Precision", "F1"))) %>%
+                  mutate(Type = "Marker")) %>%
+    ggplot(aes(x = Metric, y = Value, colour = Type, fill = Type)) +
+    geom_boxplot(size = 1.5, outlier.size = 2, alpha = 0.4) +
+    scale_colour_manual(values = c("#FC8D62", "#8DA0CB")) +
+    scale_fill_manual(values = c("#FC8D62", "#8DA0CB")) +
+    ggtitle("Gene metrics") +
+    theme_minimal(base_size = 16) +
+    theme(axis.title.x = element_blank())
+p2
+```
+
+```{r combine}
+panel <- plot_grid(p1, p2, align = "h", ncol = 2, labels = "AUTO",
+                   rel_widths = c(0.8, 1))
+panel
+```
+
+```{r output-panel}
+save_plot("../output/clustering_results.pdf", panel, ncol = 2)
+```
+
+Session info
+============
+
+```{r session-info, cache = FALSE}
+devtools::session_info()
+```
+
+```{r cleanup-docs, cache = FALSE}
+doc.files <- c(list.files(pattern = "pdf"),
+               list.files(pattern = "html"),
+               list.files(pattern = "docx"))
+
+for (file in doc.files) {
+    file.rename(file, file.path("docs", file))
+}
+```
+
