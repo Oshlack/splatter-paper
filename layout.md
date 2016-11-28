@@ -27,6 +27,7 @@ Example_evaluation_of_clustering_method__.md
 To_demonstrate_how_the_simulations__.md
 figures/clustering_results/clustering_results.png
 Figure_2_shows_the_results__.md
+Clearly_this_evaluating_could_be__.md
 conclusion.md
 Simulated_datasets_are_a_useful__.md
 Acknowledgements__.md
