@@ -22,7 +22,7 @@ An_alternative_situation_that_is__.md
 Comparison_of_simulations_Other_simulations__.md
 As_well_as_our_own__.md
 figures/sim_comparison/sim_comparison (2).png
-Comparison_of_different_simulation_methods__.md
+The_Tung_dataset_orange_is__.md
 Example_evaluation_of_clustering_method__.md
 To_demonstrate_how_the_simulations__.md
 figures/clustering_results/clustering_results.png
