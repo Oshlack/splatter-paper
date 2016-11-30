@@ -2,7 +2,7 @@ abstract.md
 introduction.md
 The_first_decade_of_next__.md
 As_scRNA_seq_data_has__.md
-The_challenges_of_scRNA_seq__.md
+The_challenges_of_analysing_scRNA__.md
 Existing_scRNA_seq_analysis_packages__.md
 In_this_paper_we_present__.md
 The_Splatter_framework_Consistent_interface__.md
@@ -16,11 +16,19 @@ begin_table_caption_Intermediate_parameters__.tex
 Parameter_estimation_Means_Library_sizes__.md
 To_make_it_easy_for__.md
 Simulating_groups_Differential_expression__.md
-The_Splat_simulation_model_above__.md
+The_Splat_simulation_model_described__.md
 Simulating_paths_End_points_DE__.md
 An_alternative_situation_that_is__.md
 Comparison_of_simulations_Other_simulations__.md
-Evaluation_of_visualisation_clustering_lineage__.md
+As_well_as_our_own__.md
+figures/sim_comparison/sim_comparison (2).png
+The_Tung_dataset_orange_is__.md
+Example_evaluation_of_clustering_method__.md
+To_demonstrate_how_the_simulations__.md
+figures/clustering_results/clustering_results.png
+Figure_2_shows_the_results__.md
+Clearly_this_evaluating_could_be__.md
 conclusion.md
+Simulated_datasets_are_a_useful__.md
 Acknowledgements__.md
 Funding__.md
