@@ -11,7 +11,6 @@ The_Splat_simulation_Simulating_paths__.md
 Splatter_contains_several_simulation_models__.md
 Simulation_model_Negative_binomial_Expression__.md
 The_Splat_simulation_model_is__.md
-x_2__.md
 begin_table_caption_Parameters_in__.tex
 begin_table_caption_Intermediate_parameters__.tex
 Parameter_estimation_Means_Library_sizes__.md
