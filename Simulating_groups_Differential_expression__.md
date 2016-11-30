@@ -1,3 +1,1 @@
 ## Simulating groups
-
-* Differential expression
