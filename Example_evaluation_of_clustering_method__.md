@@ -1,1 +1,1 @@
-# Example evaluation of clustering method
+# Example: using Splatter simulations to evaluate a clustering method
