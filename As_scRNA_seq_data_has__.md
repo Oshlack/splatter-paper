@@ -5,8 +5,6 @@ in peer-reviewed journals or as preprints. A table of scRNA-seq software is avai
 designed for the analysis of a bulk RNA-seq experiment. In a bulk experiment the groups of samples are known
 and the task is often to test for genes that are differentially expressed (DE) between two or more groups. In contrast the groups
 in a single-cell experiment are usually unknown and the analysis is often more exploratory. Many of the
-current packages focus on the task of assigning cells to groups. Once approach is to cluster cells into
-discrete groups of cells before applying more traditional differential expression testing. This approach
-is taken by tools such as SC3 \cite{Kiselev2016-fa}, CIDR \cite{Lin2016-yu} and Seurat \cite{Satija_2015} and makes sense for a sample with a defined set of mature cell types. In the developmental setting, where stem cells are differentiating into mature cells, it may be more appropriate
+current packages focus on the task of assigning cells to groups before applying more traditional differential expression testing. This approach is taken by tools such as SC3 \cite{Kiselev2016-fa}, CIDR \cite{Lin2016-yu} and Seurat \cite{Satija_2015} and makes sense for a sample with a defined set of mature cell types. In the developmental setting, for example, where stem cells are differentiating into mature cells, it may be more appropriate
 to order cells along a continuous trajectory from one cell type to another. Tools such as Monocle \cite{Trapnell_2014}, CellTree \cite{duVerle_2016} and 
 Sincell \cite{Julia2015-zc} take this approach, ordering cells along a path then looking for patterns in the changes of gene expression.
