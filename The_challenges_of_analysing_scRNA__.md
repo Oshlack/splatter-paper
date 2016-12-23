@@ -9,4 +9,4 @@ sequencing depth it is difficult to accurately measure expression in lowly expre
 protocols may not reliably capture all the RNA present, resulting in "dropout" events where a gene is expressed in
 a sample but not observed in the sequencing data. Additionally it is impossible to replicate an
 individual cell and it may not be possible to capture all the cell types of interest. Quality control
-of damaged, missing, multiple or otherwise low-quality cells is also an important consideration.
+of damaged, missing, multiple or otherwise low-quality cells is an important step prior to downstream analysis.
