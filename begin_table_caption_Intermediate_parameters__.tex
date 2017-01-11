@@ -10,7 +10,7 @@
         Expected library size & $L_j$ & Library size for cell $j$ & $\sim \ln\mathcal{N}(\mu^{L}, \sigma^{L})$\\
         Cell mean & $\lambda^{'}_{i,j}$ & Mean expression for gene $i$ in cell $j$ & $L_j(\lambda_i / \sum{\lambda_i})$\\
         BCV & $B_{i,j}$ & Biological coefficient of variation for gene $i$ in cell $j$ & $(\phi + 1 / \sqrt{\lambda^{'}_{i,j}})(df \sim \chi^2(df))^{1/2}$ \\
-        Trended cell mean & $\lambda_{i,j}$ & Mean expression for gene $i$ in cell $j$ after applying BCV & $\sim Gamma(1 / B_i^2, \lambda^{'}_{i,j}B_i^{2})$\\
+        Trended cell mean & $\lambda_{i,j}$ & Mean expression for gene $i$ in cell $j$ after applying BCV & $\sim Gamma(1 / B_{i,j}^2, \lambda^{'}_{i,j}B_{i,j}^{2})$\\
         True count & $Y^{'}_{i,j}$ & True simulated count for gene $i$ in cell $j$ & $\sim Poi(\lambda_{i,j})$\\
         Dropout value & $\eta_{i,j}$ & Value provided to dropout logistic function for gene $i$ in cell $j$ & $(L_j / Med(L_j))(\log(\lambda_{i,j}))$\\
         Dropout probability & $\pi^{D}_{i,j}$ & Probability that gene $i$ in cell $j$ will be kept & $1 / (1 + \exp(-k(\eta_{i,j} - x_0))$\\
