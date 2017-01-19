@@ -21,6 +21,7 @@ Splat__.md
 The_Splat_simulation_model_is__.md
 begin_table_caption_Parameters_in__.tex
 begin_table_caption_Intermediate_parameters__.tex
+figures/splat_model/splat_model.png
 Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
 Comparison_of_simulations_Other_simulations__.md
