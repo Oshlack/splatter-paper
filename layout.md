@@ -13,7 +13,7 @@ Splat__.md
 The_Splat_simulation_model_is__.md
 begin_table_caption_Parameters_in__.tex
 begin_table_caption_Intermediate_parameters__.tex
-Parameter_estimation_Means_Library_sizes__.md
+Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
 Simulating_groups_Differential_expression__.md
 The_Splat_simulation_model_described__.md
