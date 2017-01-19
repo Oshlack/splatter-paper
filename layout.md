@@ -10,7 +10,7 @@ Splatter_is_designed_to_provide__.md
 Simulation_models__.md
 As_well_as_our_own__.md
 Simple__.md
-Simple_A_basic_negative_binomal__.md
+A_basic_negative_binomal_counts__.md
 Lun__.md
 Published_in_Pooling_across_cells__.md
 Lun_2__.md
