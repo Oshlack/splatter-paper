@@ -9,6 +9,7 @@ The_Splatter_framework_Consistent_interface__.md
 Splatter_is_designed_to_provide__.md
 Simulation_models__.md
 As_well_as_our_own__.md
+Simple__.md
 Splat__.md
 The_Splat_simulation_model_is__.md
 begin_table_caption_Parameters_in__.tex
