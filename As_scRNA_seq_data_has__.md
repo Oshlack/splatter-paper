@@ -1,7 +1,8 @@
 As scRNA-seq data has become available there has been a rapid development of new bioinformatics tools
 attempting to unlock it's potential. Currently there are at least 80 available software packages that
 have been designed specifically for the analysis of scRNA-seq data, the majority of which have been published
-in peer-reviewed journals or as preprints. A table of scRNA-seq software is available at [https://goo.gl/4wcVwn](https://goo.gl/4wcVwn). The focus of these packages is often different from those
+in peer-reviewed journals or as preprints. A table of current scRNA-seq software is available at [https://goo.gl/4wcVwn](https://goo.gl/4wcVwn).
+The focus of these packages is often different from those
 designed for the analysis of a bulk RNA-seq experiment. In a bulk experiment the groups of samples are known
 and the task is often to test for genes that are differentially expressed (DE) between two or more groups. In contrast the groups
 in a single-cell experiment are usually unknown and the analysis is often more exploratory. Many of the
