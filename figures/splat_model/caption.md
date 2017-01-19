@@ -1,1 +1,1 @@
-Replace this text with your caption
+Diagram of the core Splat simulation model
