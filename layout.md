@@ -16,7 +16,7 @@ begin_table_caption_Intermediate_parameters__.tex
 Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
 Comparison_of_simulations_Other_simulations__.md
-As_well_as_our_own__.md
+Figure_1_shows_the_output__.md
 figures/sim_comparison/sim_comparison (2).png
 The_Tung_dataset_orange_is__.md
 Complex_simulations__.md
