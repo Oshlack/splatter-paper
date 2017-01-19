@@ -1,0 +1,1 @@
+Published in "Pooling across cells to normalize single-cell RNA sequencing data with many zero counts" \cite{L_Lun_2016} this simulation is also based on a negative-binomial with gamma means but includes a scaling factor for each cell. This simulation can also model differential expression between multiple groups.
