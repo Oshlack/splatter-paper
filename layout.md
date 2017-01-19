@@ -2,7 +2,6 @@ abstract.md
 introduction.md
 The_first_decade_of_next__.md
 As_scRNA_seq_data_has__.md
-The_challenges_of_analysing_scRNA__.md
 Existing_scRNA_seq_analysis_packages__.md
 In_this_paper_we_present__.md
 The_Splatter_framework_Consistent_interface__.md
