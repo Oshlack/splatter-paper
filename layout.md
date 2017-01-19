@@ -29,7 +29,7 @@ figures/sim_comparison/sim_comparison (2).png
 The_Tung_dataset_orange_is__.md
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
-The_Splat_simulation_model_described__.md
+The_simulation_models_described_above__.md
 Simulating_paths_End_points_DE__.md
 An_alternative_situation_that_is__.md
 Example_using_Splatter_simulations_to__.md
