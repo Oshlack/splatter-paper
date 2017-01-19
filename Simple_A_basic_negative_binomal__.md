@@ -1,1 +1,1 @@
-* Simple - A basic negative-binomal counts with gamma distributed means. This simulation is included as a reference and is not meant to truly reproduce many of the features of scRNA-seq data.
+A basic negative-binomal counts with gamma distributed means. This simulation is included as a reference and is not meant to truly reproduce many of the features of scRNA-seq data.
