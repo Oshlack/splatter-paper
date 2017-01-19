@@ -9,7 +9,7 @@ The_Splatter_framework_Consistent_interface__.md
 Splatter_is_designed_to_provide__.md
 Simulation_models__.md
 Splatter_contains_several_simulation_models__.md
-Simulation_model_Negative_binomial_Expression__.md
+Splat__.md
 The_Splat_simulation_model_is__.md
 begin_table_caption_Parameters_in__.tex
 begin_table_caption_Intermediate_parameters__.tex
