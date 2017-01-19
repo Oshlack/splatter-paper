@@ -1,0 +1,1 @@
+The scDD package aims to test for differential expression between two groups but also more complex changes such as differential distributions or differential proportions \cite{Korthauer_2015}. This is reflected in their simulation which can contain genes of all these types and also samples information from a real dataset.
