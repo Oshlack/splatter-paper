@@ -1,1 +1,1 @@
-# The Splat simulation
+# Simulation models
