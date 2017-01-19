@@ -13,6 +13,7 @@ Simple__.md
 Simple_A_basic_negative_binomal__.md
 Lun__.md
 Published_in_Pooling_across_cells__.md
+Lun_2__.md
 Splat__.md
 The_Splat_simulation_model_is__.md
 begin_table_caption_Parameters_in__.tex
