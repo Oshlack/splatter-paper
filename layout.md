@@ -15,6 +15,7 @@ begin_table_caption_Parameters_in__.tex
 begin_table_caption_Intermediate_parameters__.tex
 Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
+Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
 The_Splat_simulation_model_described__.md
 Simulating_paths_End_points_DE__.md
