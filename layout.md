@@ -17,12 +17,12 @@ Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
 Comparison_of_simulations_Other_simulations__.md
 As_well_as_our_own__.md
+figures/sim_comparison/sim_comparison (2).png
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
 The_Splat_simulation_model_described__.md
 Simulating_paths_End_points_DE__.md
 An_alternative_situation_that_is__.md
-figures/sim_comparison/sim_comparison (2).png
 The_Tung_dataset_orange_is__.md
 Example_using_Splatter_simulations_to__.md
 To_demonstrate_how_the_simulations__.md
