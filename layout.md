@@ -17,7 +17,7 @@ In_Overcoming_confounding_plate_effects__.md
 scDD__.md
 The_scDD_package_aims_to__.md
 Splat__.md
-The_Splat_simulation_model_is__.md
+We_have_developed_the_splat__.md
 begin_table_caption_Parameters_in__.tex
 begin_table_caption_Intermediate_parameters__.tex
 figures/splat_model/splat_model.png
