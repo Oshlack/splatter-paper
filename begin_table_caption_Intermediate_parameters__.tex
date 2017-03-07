@@ -1,16 +1,15 @@
 \begin{table} 
-    \caption{Intermediate parameters in the Splat simulation model}
+    \caption{Intermediate parameters in the Splat simulation model}\label{tab:intermediate}
     \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}p{0.2\linewidth}p{0.1\linewidth}p{0.4\linewidth}p{0.2\linewidth}@{}}
         Name & Symbol & Description & Equation \\
         Original gene mean & $\lambda^{'}_i$ & Original mean expression for gene $i$ & $\sim Gamma(\alpha, \beta)$\\
         Outlier indicator & $1^{O}_i$ & Whether gene $i$ is an expression outlier & $\sim Ber(\pi^{O})$\\ 
-        Outlier direction & $\delta_i$ & Whether outlier gene $i$ is highly ($1$) or lowly ($-1$) expressed & $(-1)^{\sim Ber(\pi^{LO})}$\\
         Outlier factor & $\psi^{'}_i$ & Factor for outlier gene $i$ & $\sim \ln\mathcal{N}(\mu^{O}, \sigma^{O})$\\
-        Gene mean & $\lambda_i$ & Mean expression for gene $i$ after applying outlier factors & $1^{O}_i({\psi^{'}_i}^{\delta_i}Med(\lambda^{'}_i)) + (1 - 1^{O}_i)(\lambda^{'}_i)$\\
+        Gene mean & $\lambda_i$ & Mean expression for gene $i$ after applying outlier factors & $1^{O}_i({\psi^{'}_i}Med(\lambda^{'}_i)) + (1 - 1^{O}_i)(\lambda^{'}_i)$\\
         Expected library size & $L_j$ & Library size for cell $j$ & $\sim \ln\mathcal{N}(\mu^{L}, \sigma^{L})$\\
         Cell mean & $\lambda^{'}_{i,j}$ & Mean expression for gene $i$ in cell $j$ & $L_j(\lambda_i / \sum{\lambda_i})$\\
         BCV & $B_{i,j}$ & Biological coefficient of variation for gene $i$ in cell $j$ & $(\phi + 1 / \sqrt{\lambda^{'}_{i,j}})(df \sim \chi^2(df))^{1/2}$ \\
-        Trended cell mean & $\lambda_{i,j}$ & Mean expression for gene $i$ in cell $j$ after applying BCV & $\sim Gamma(1 / B_i^2, \lambda^{'}_{i,j}B_i^{2})$\\
+        Trended cell mean & $\lambda_{i,j}$ & Mean expression for gene $i$ in cell $j$ after applying BCV & $\sim Gamma(1 / B_{i,j}^2, \lambda^{'}_{i,j}B_{i,j}^{2})$\\
         True count & $Y^{'}_{i,j}$ & True simulated count for gene $i$ in cell $j$ & $\sim Poi(\lambda_{i,j})$\\
         Dropout value & $\eta_{i,j}$ & Value provided to dropout logistic function for gene $i$ in cell $j$ & $(L_j / Med(L_j))(\log(\lambda_{i,j}))$\\
         Dropout probability & $\pi^{D}_{i,j}$ & Probability that gene $i$ in cell $j$ will be kept & $1 / (1 + \exp(-k(\eta_{i,j} - x_0))$\\
