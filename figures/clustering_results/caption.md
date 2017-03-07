@@ -1,1 +1,1 @@
-Replace this text with your caption
+Evaluation of SC3 results. Metrics for the evaluation of clustering (A) include the Rand index, Hubert and Arabie's adjusted Rand index (HA), Morey and Agresti's adjusted Rand index (MA), Fowlkes and Mallows's index (FM) and the Jaccard index. Detection of differentially expressed and marker genes was evaluated (B) using accuracy, recall (true positive rate), precision and F1 score (harmonic mean of precision and recall).

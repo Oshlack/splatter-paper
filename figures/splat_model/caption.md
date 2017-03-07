@@ -1,0 +1,1 @@
+Diagram of the core Splat simulation model
