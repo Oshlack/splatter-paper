@@ -43,3 +43,4 @@ Acknowledgements__.md
 Funding__.md
 figures/simple_model/simple_model.png
 figures/lun_model/lun_model.png
+figures/lun2_model/lun2_model.png
