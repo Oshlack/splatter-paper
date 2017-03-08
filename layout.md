@@ -35,7 +35,7 @@ An_alternative_situation_that_is__.md
 Example_using_Splatter_simulations_to__.md
 To_demonstrate_how_the_simulations__.md
 figures/clustering_results/clustering_results.png
-Figure_2_shows_the_results__.md
+Figure_ref_fig_sc3_example__.md
 Clearly_this_evaluating_could_be__.md
 conclusion.md
 Simulated_datasets_are_a_useful__.md
