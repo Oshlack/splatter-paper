@@ -1,1 +1,1 @@
-Replace this text with your caption
+Diagram of the core Lun simulation model. Input parameters are indicated with double borders, blue shading shows those that can be estimated from real data. Red shading indicates the final output.
