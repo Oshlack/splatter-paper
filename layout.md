@@ -39,7 +39,7 @@ Figure_ref_fig_sc3_example__.md
 Clearly_this_evaluating_could_be__.md
 conclusion.md
 Simulated_datasets_are_a_useful__.md
-Acknowledgements__.md
+Acknowledgements_This_research_is_supported__.md
 Funding__.md
 Supplementary_figures__.md
 figures/simple_model/simple_model.png
