@@ -42,3 +42,4 @@ Simulated_datasets_are_a_useful__.md
 Acknowledgements__.md
 Funding__.md
 figures/simple_model/simple_model.png
+figures/lun_model/lun_model.png
