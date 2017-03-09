@@ -19,12 +19,12 @@ The_scDD_package_aims_to__.md
 Splat__.md
 We_have_developed_the_Splat__.md
 begin_table_caption_Parameters_in__.tex
-begin_table_caption_Intermediate_parameters__.tex
 figures/splat_model/splat_model.png
 Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
 Comparison_of_simulations_Other_simulations__.md
 Figure_1_shows_the_output__.md
+figures/sim_comparison3/sim_comparison3.png
 figures/sim_comparison/sim_comparison (2).png
 The_Tung_dataset_orange_is__.md
 Complex_simulations__.md
@@ -35,9 +35,13 @@ An_alternative_situation_that_is__.md
 Example_using_Splatter_simulations_to__.md
 To_demonstrate_how_the_simulations__.md
 figures/clustering_results/clustering_results.png
-Figure_2_shows_the_results__.md
+Figure_ref_fig_sc3_example__.md
 Clearly_this_evaluating_could_be__.md
 conclusion.md
 Simulated_datasets_are_a_useful__.md
-Acknowledgements__.md
+Acknowledgements_This_research_is_supported__.md
 Funding__.md
+Supplementary_figures__.md
+figures/simple_model/simple_model.png
+figures/lun_model/lun_model.png
+figures/lun2_model/lun2_model.png
