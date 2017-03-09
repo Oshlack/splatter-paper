@@ -24,7 +24,7 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       warning        = FALSE)
 ```
 
-```{r libraries}
+```{r libraries, cache = FALSE}
 # RNA-seq
 library("scater")
 library("splatter")
@@ -234,6 +234,13 @@ Zeros (cells)
 comp$Plots$ZerosCell
 ```
 
+Mean-zeros
+-------------
+
+```{r mean-zeros}
+comp$Plots$MeanZeros
+```
+
 Combined
 --------
 
@@ -241,26 +248,29 @@ Combined
 p1 <- comp$Plots$Means + theme(legend.position = "none",
                                axis.title.x = element_blank())
 p2 <- comp$Plots$Variances + theme(legend.position = "none",
-                               axis.title.x = element_blank())
+                                   axis.title.x = element_blank())
 p3 <- comp$Plots$MeanVar + theme(legend.position = "none")
 p4 <- comp$Plots$LibrarySizes + theme(legend.position = "none",
-                               axis.title.x = element_blank())
+                                      axis.title.x = element_blank())
 p5 <- comp$Plots$ZerosGene + theme(legend.position = "none",
-                               axis.title.x = element_blank())
+                                   axis.title.x = element_blank())
 p6 <-  comp$Plots$ZerosCell + theme(legend.position = "none",
-                               axis.title.x = element_blank())
+                                    axis.title.x = element_blank())
+p7 <- comp$Plots$MeanZeros + theme(legend.position = "none")
 leg <- get_legend(p1 + theme(legend.position = "bottom"))
 ```
 
 ```{r plot-combined}
-comb.plt <- plot_grid(p1, p2, p3, p4, p5, p6, align = "v", ncol = 2,
-                      labels = "AUTO")
-panel <- plot_grid(comb.plt, leg, ncol = 1, rel_heights = c(1, .05))
+comb.plt <- plot_grid(p1, p2, p3, p4, p5, p6, p7, leg, align = "v", ncol = 2,
+                      labels = c("A", "B", "C", "D", "E", "F", "G", ""))
+#panel <- plot_grid(comb.plt, leg, ncol = 1, rel_heights = c(1, .05))
+panel <- comb.plt
 panel
 ```
 
-```{r output-combined}
-save_plot("../output/sim_comparison.pdf", panel, ncol = 2, nrow = 3)
+```{r output-combined, cache = FALSE}
+save_plot("../output/sim_comparison.pdf", panel, ncol = 2, nrow = 4)
+save_plot("../output/sim_comparison.png", panel, ncol = 2, nrow = 4)
 ```
 
 Different situations
