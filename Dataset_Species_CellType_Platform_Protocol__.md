@@ -1,0 +1,7 @@
+|Dataset |Species |CellType                       |Platform       |Protocol            |UMI | NumCells|
+|:-------|:-------|:------------------------------|:--------------|:-------------------|:---|--------:|
+|Camp    |Human   |Whole brain organoids          |Fluidigm C1    |SMARTer             |No  |      597|
+|Engel   |Mouse   |Natural killer T cells         |Flow cytometry |Modified Smart-seq2 |No  |      203|
+|Klein   |Human   |K562 cells                     |InDrop         |CEL-Seq             |Yes |      213|
+|Tung    |Human   |Induced pluripotent stem cells |Fluidigm C1    |Modified SMARTer    |Yes |      564|
+|Zeisel  |Mouse   |Cortex and hippocampus cells   |Fluidigm C1    |STRT-Seq            |Yes |     3005|
