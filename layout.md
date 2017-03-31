@@ -26,6 +26,7 @@ Comparison_of_simulations_Other_simulations__.md
 To_compare_the_simulation_models__.md
 figures/sim_comparison/sim_comparison (2).png
 begin_table_caption_label_tab__.tex
+figures/overall_tung/overall_tung.png
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
 The_simulation_models_described_above__.md
