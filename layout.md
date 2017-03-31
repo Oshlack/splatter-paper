@@ -27,6 +27,7 @@ Figure_1_shows_the_output__.md
 figures/sim_comparison3/sim_comparison3.png
 figures/sim_comparison/sim_comparison (2).png
 The_Tung_dataset_orange_is__.md
+Dataset_Species_CellType_Platform_Protocol__.md
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
 The_simulation_models_described_above__.md
