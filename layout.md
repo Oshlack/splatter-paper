@@ -23,6 +23,7 @@ figures/splat_model/splat_model.png
 Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
 Comparison_of_simulations_Other_simulations__.md
+To_compare_the_simulation_models__.md
 figures/sim_comparison/sim_comparison (2).png
 begin_table_caption_label_tab__.tex
 Complex_simulations__.md
