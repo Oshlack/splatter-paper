@@ -29,6 +29,7 @@ begin_table_caption_label_tab__.tex
 figures/overall_tung/overall_tung.png
 We_can_see_that_for__.md
 figures/datasets_heatmap/datasets_heatmap.png
+Looking_across_the_datasets_we__.md
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
 The_simulation_models_described_above__.md
