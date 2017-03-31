@@ -24,7 +24,6 @@ Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
 Comparison_of_simulations_Other_simulations__.md
 figures/sim_comparison/sim_comparison (2).png
-The_Tung_dataset_orange_is__.md
 begin_table_caption_label_tab__.tex
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
