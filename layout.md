@@ -23,7 +23,6 @@ figures/splat_model/splat_model.png
 Splat_parameter_estimation__.md
 To_make_it_easy_for__.md
 Comparison_of_simulations_Other_simulations__.md
-figures/sim_comparison3/sim_comparison3.png
 figures/sim_comparison/sim_comparison (2).png
 The_Tung_dataset_orange_is__.md
 begin_table_caption_label_tab__.tex
