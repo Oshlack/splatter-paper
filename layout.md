@@ -27,7 +27,7 @@ To_compare_the_simulation_models__.md
 figures/sim_comparison/sim_comparison (2).png
 begin_table_caption_label_tab__.tex
 figures/overall_tung/overall_tung.png
-We_can_see_that_for__.md
+From_these_diagnostic_plots_we__.md
 figures/datasets_heatmap/datasets_heatmap.png
 Looking_across_the_datasets_we__.md
 Complex_simulations__.md
