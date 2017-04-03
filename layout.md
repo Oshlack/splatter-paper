@@ -21,7 +21,7 @@ We_have_developed_the_Splat__.md
 begin_table_caption_Parameters_in__.tex
 figures/splat_model/splat_model.png
 Splat_parameter_estimation__.md
-To_make_it_easy_for__.md
+In_order_to_easily_generate__.md
 Comparison_of_simulations_Other_simulations__.md
 To_compare_the_simulation_models__.md
 figures/sim_comparison/sim_comparison (2).png
