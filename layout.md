@@ -43,6 +43,7 @@ Figure_ref_fig_sc3_example__.md
 While_it_is_beyond_the__.md
 conclusion.md
 Simulated_datasets_are_a_useful__.md
+Simulations_can_be_a_powerful__.md
 Acknowledgements_This_research_is_supported__.md
 Funding__.md
 Supplementary_figures__.md
