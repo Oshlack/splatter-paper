@@ -228,60 +228,26 @@
   title = {{Overcoming confounding plate effects in differential expression analyses of single-cell {RNA}-seq data}},
 }
 
-@article{Korthauer_2016,
-  title       = "{A statistical approach for identifying differential
-                 distributions in single-cell RNA-seq experiments}",
-  author      = "Korthauer, Keegan D and Chu, Li-Fang and Newton, Michael A and
-                 Li, Yuan and Thomson, James and Stewart, Ron and Kendziorski,
-                 Christina",
-  affiliation = "Department of Biostatistics and Computational Biology,
-                 Dana-Farber Cancer Institute, Boston, 02215, MA, USA.
-                 Department of Biostatistics, Harvard T. H. Chan School of
-                 Public Health, Boston, 02115, MA, USA. Morgridge Institute for
-                 Research, University of Wisconsin, Madison, 53706, WI, USA.
-                 Department of Biostatistics, University of Wisconsin, Madison,
-                 53706, WI, USA. Department of Statistics, University of
-                 Wisconsin, Madison, 53706, WI, USA. Department of Statistics,
-                 University of Wisconsin, Madison, 53706, WI, USA. Morgridge
-                 Institute for Research, University of Wisconsin, Madison,
-                 53706, WI, USA. Department of Cell and Regenerative Biology,
-                 University of Wisconsin, Madison, 53706, WI, USA. Department
-                 of Molecular, Cellular, and Developmental Biology, University
-                 of California, Santa Barbara, 93106, CA, USA. Morgridge
-                 Institute for Research, University of Wisconsin, Madison,
-                 53706, WI, USA. Department of Biostatistics, University of
-                 Wisconsin, Madison, 53706, WI, USA. kendzior@biostat.wisc.edu.
-                 Department of Statistics, University of Wisconsin, Madison,
-                 53706, WI, USA. kendzior@biostat.wisc.edu.",
-  abstract    = "The ability to quantify cellular heterogeneity is a major
-                 advantage of single-cell technologies. However, statistical
-                 methods often treat cellular heterogeneity as a nuisance. We
-                 present a novel method to characterize differences in
-                 expression in the presence of distinct expression states
-                 within and among biological conditions. We demonstrate that
-                 this framework can detect differential expression patterns
-                 under a wide range of settings. Compared to existing
-                 approaches, this method has higher power to detect subtle
-                 differences in gene expression distributions that are more
-                 complex than a mean shift, and can characterize those
-                 differences. The freely available R package scDD implements
-                 the approach.",
-  journal     = "Genome biology",
-  volume      =  17,
-  number      =  1,
-  pages       = "222",
-  month       =  "25~" # oct,
-  year        =  2016,
-  url         = "http://dx.doi.org/10.1186/s13059-016-1077-y",
-  keywords    = "Cellular heterogeneity; Differential expression; Mixture
-                 modeling; Single-cell RNA-seq",
-  language    = "en",
-  issn        = "1465-6906",
-  pmid        = "27782827",
-  doi         = "10.1186/s13059-016-1077-y",
-  pmc         = "PMC5080738"
-}
 
+@article{Korthauer_2016,
+  title = {{A statistical approach for identifying differential distributions in single-cell RNA-seq experiments}},
+  author = {Korthauer, Keegan D and Chu, Li-Fang and Newton, Michael A and Li, Yuan and Thomson, James and Stewart, Ron and Kendziorski Christina},
+  affiliation = {Department of Biostatistics and Computational Biology Dana-Farber Cancer Institute, Boston, 02215, MA, USA. Department of Biostatistics, Harvard T. H. Chan School of Public Health, Boston, 02115, MA, USA. Morgridge Institute for Research, University of Wisconsin, Madison, 53706, WI, USA. Department of Biostatistics, University of Wisconsin, Madison 53706, WI, USA. Department of Statistics, University of Wisconsin, Madison, 53706, WI, USA. Department of Statistics University of Wisconsin, Madison, 53706, WI, USA. Morgridge Institute for Research, University of Wisconsin, Madison 53706, WI, USA. Department of Cell and Regenerative Biology University of Wisconsin, Madison, 53706, WI, USA. Department of Molecular, Cellular, and Developmental Biology, University of California, Santa Barbara, 93106, CA, USA. Morgridge Institute for Research, University of Wisconsin, Madison 53706, WI, USA. Department of Biostatistics, University of Wisconsin, Madison, 53706, WI, USA. kendzior@biostat.wisc.edu. Department of Statistics, University of Wisconsin, Madison 53706, WI, USA. kendzior@biostat.wisc.edu.},
+  abstract = {The ability to quantify cellular heterogeneity is a major advantage of single-cell technologies. However, statistical methods often treat cellular heterogeneity as a nuisance. We present a novel method to characterize differences in expression in the presence of distinct expression states within and among biological conditions. We demonstrate that this framework can detect differential expression patterns under a wide range of settings. Compared to existing approaches, this method has higher power to detect subtle differences in gene expression distributions that are more complex than a mean shift, and can characterize those differences. The freely available R package scDD implements the approach.},
+  journal = {Genome biology},
+  volume = {17},
+  number = {1},
+  pages = {222},
+  month = {25~ # oct},
+  year = {2016},
+  url = {http://dx.doi.org/10.1186/s13059-016-1077-y},
+  keywords = {Cellular heterogeneity; Differential expression; Mixture modeling; Single-cell RNA-seq},
+  language = {en},
+  issn = {1465-6906},
+  pmid = {27782827},
+  doi = {10.1186/s13059-016-1077-y},
+  pmc = {PMC5080738},
+}
 
 
 @article{Anders_2010,
@@ -366,49 +332,41 @@
   journal = {Bioinformatics},
 }
 
+
 @article{Lun_2017,
-  title    = "{Overcoming confounding plate effects in differential expression
-              analyses of single-cell RNA-seq data}",
-  author   = "Lun, Aaron T L and Marioni, John C",
-  abstract = "An increasing number of studies are using single-cell
-              RNA-sequencing (scRNA-seq) to characterize the gene expression
-              profiles of individual cells. One common analysis applied to
-              scRNA-seq data involves detecting differentially expressed (DE)
-              genes between cells in different biological groups. However, many
-              experiments are designed such that the cells to be compared are
-              processed in separate plates or chips, meaning that the groupings
-              are confounded with systematic plate effects. This confounding
-              aspect is frequently ignored in DE analyses of scRNA-seq data. In
-              this article, we demonstrate that failing to consider plate
-              effects in the statistical model results in loss of type I error
-              control. A solution is proposed whereby counts are summed from
-              all cells in each plate and the count sums for all plates are
-              used in the DE analysis. This restores type I error control in
-              the presence of plate effects without compromising detection
-              power in simulated data. Summation is also robust to varying
-              numbers and library sizes of cells on each plate. Similar results
-              are observed in DE analyses of real data where the use of count
-              sums instead of single-cell counts improves specificity and the
-              ranking of relevant genes. This suggests that summation can
-              assist in maintaining statistical rigour in DE analyses of
-              scRNA-seq data with plate effects.",
-  journal  = "Biostatistics",
-  month    =  "6~" # feb,
-  year     =  2017,
-  url      = "http://dx.doi.org/10.1093/biostatistics/kxw055",
-  keywords = "Differential expression; Plate effects; Single-cell RNA
-              sequencing; Summation",
-  language = "en",
-  issn     = "1465-4644, 1468-4357",
-  pmid     = "28334062",
-  doi      = "10.1093/biostatistics/kxw055"
+  title = {{Overcoming confounding plate effects in differential expression analyses of single-cell RNA-seq data}},
+  author = {Lun, Aaron T L and Marioni, John C},
+  abstract = {An increasing number of studies are using single-cell RNA-sequencing (scRNA-seq) to characterize the gene expression profiles of individual cells. One common analysis applied to scRNA-seq data involves detecting differentially expressed (DE) genes between cells in different biological groups. However, many experiments are designed such that the cells to be compared are processed in separate plates or chips, meaning that the groupings are confounded with systematic plate effects. This confounding aspect is frequently ignored in DE analyses of scRNA-seq data. In this article, we demonstrate that failing to consider plate effects in the statistical model results in loss of type I error control. A solution is proposed whereby counts are summed from all cells in each plate and the count sums for all plates are used in the DE analysis. This restores type I error control in the presence of plate effects without compromising detection power in simulated data. Summation is also robust to varying numbers and library sizes of cells on each plate. Similar results are observed in DE analyses of real data where the use of count sums instead of single-cell counts improves specificity and the ranking of relevant genes. This suggests that summation can assist in maintaining statistical rigour in DE analyses of scRNA-seq data with plate effects.},
+  journal = {Biostatistics},
+  month = {6~ # feb},
+  year = {2017},
+  url = {http://dx.doi.org/10.1093/biostatistics/kxw055},
+  keywords = {Differential expression; Plate effects; Single-cell RNA sequencing; Summation},
+  language = {en},
+  issn = {1465-4644, 1468-4357},
+  pmid = {28334062},
+  doi = {10.1093/biostatistics/kxw055},
 }
 
 
 @misc{fastqc,
-  title        = "{FastQC A Quality Control tool for High Throughput Sequence
-                  Data}",
-  url          = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
-  howpublished = "\url{http://www.bioinformatics.babraham.ac.uk/projects/fastqc/}",
-  note         = "Accessed: 2017-1-9"
+  title = {{FastQC A Quality Control tool for High Throughput Sequence Data}},
+  url = {http://www.bioinformatics.babraham.ac.uk/projects/fastqc/},
+  howpublished = {\url{http://www.bioinformatics.babraham.ac.uk/projects/fastqc/}},
+  note = {Accessed: 2017-1-9},
+}
+
+
+@article{Dobin_2012,
+  doi = {10.1093/bioinformatics/bts635},
+  url = {https://doi.org/10.1093%2Fbioinformatics%2Fbts635},
+  year = {2012},
+  month = {oct},
+  publisher = {Oxford University Press ({OUP})},
+  volume = {29},
+  number = {1},
+  pages = {15--21},
+  author = {A. Dobin and C. A. Davis and F. Schlesinger and J. Drenkow and C. Zaleski and S. Jha and P. Batut and M. Chaisson and T. R. Gingeras},
+  title = {{{STAR}: ultrafast universal {RNA}-seq aligner}},
+  journal = {Bioinformatics},
 }
