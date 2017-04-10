@@ -29,7 +29,7 @@ figures/sim_comparison/sim_comparison (2).png
 begin_table_caption_label_tab__.tex
 figures/overall_tung/overall_tung_top.png
 From_these_diagnostic_plots_we__.md
-figures/overall_tung_bottom/overall_tung_bottom.png
+figures/overall_tung_bottom/overall_tung_bottom (1).png
 While_this_view_allows_us__.md
 figures/datasets_heatmap/datasets_heatmap.png
 Looking_across_the_datasets_we__.md
