@@ -4,4 +4,4 @@ The procedure for estimating expression outlier parameters is more complex. Taki
 
 BCV parameters are estimated using the estimateDispersion function in the edgeR package \cite{Robinson_2009}. When testing the estimation procedure on simulated datasets we observed that the edgeR estimate of common dispersion was inflated, therefore we apply a linear correction to this value (\(\hat{\phi} = 0.1 + 0.25\hat{\phi}_\textrm{edgeR}\)).
 
-The midpoint (\(x_0\)) and shape (\(k\)) parameters for the dropout function are estimated by fitting a logistic function to the relationship between the log means of the normalised counts and the proportion of samples that are zero for each gene.
+The midpoint (\(x_0\)) and shape (\(k\)) parameters for the dropout function are estimated by fitting a logistic function to the relationship between the log means of the normalised counts and the proportion of samples that are zero for each gene (Supplementary Figure X).
