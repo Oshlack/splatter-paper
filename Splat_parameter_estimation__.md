@@ -1,1 +1,1 @@
-# Splat parameter estimation
+## Splat parameter estimation
