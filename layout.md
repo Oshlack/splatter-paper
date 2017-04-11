@@ -45,7 +45,7 @@ conclusion.md
 Simulations_can_be_a_powerful__.md
 Methods__.md
 In_order_to_easily_generate__.md
-Datasets_Each_of_the_datasets__.md
+Splat_parameter_estimation_In_order__.md
 Acknowledgements_This_research_is_supported__.md
 Funding__.md
 Supplementary_figures__.md
