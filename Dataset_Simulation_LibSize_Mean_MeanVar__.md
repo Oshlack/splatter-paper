@@ -1,3 +1,4 @@
+\label{tab:mads}Median Absolute Deviations
 |Dataset |Simulation |     LibSize|  Mean| MeanVar| MeanZeros| Variance| ZerosCell| ZerosGene|
 |:-------|:----------|-----------:|-----:|-------:|---------:|--------:|---------:|---------:|
 |Camp    |Splat      |    60586.50| 0.353|   1.148|      11.0|    1.135|     6.189|      11.5|
