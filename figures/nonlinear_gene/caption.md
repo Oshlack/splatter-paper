@@ -1,1 +1,1 @@
-Replace this text with your caption
+Example of a simulated gene that changes expression in a non-linear way over the course of a path. Each point is a cell with the x-axis showing progression along the path and the y-axis the expression level. The blue line shows a LOESS fit.
