@@ -21,10 +21,8 @@ Splat__.md
 We_have_developed_the_Splat__.md
 begin_table_caption_Parameters_in__.tex
 figures/splat_model/splat_model.png
-In_order_to_easily_generate__.md
 Comparison_of_simulations_Other_simulations__.md
 To_compare_the_simulation_models__.md
-figures/sim_comparison/sim_comparison (2).png
 begin_table_caption_label_tab__.tex
 figures/overall_tung/overall_tung_top.png
 From_these_diagnostic_plots_we__.md
@@ -46,6 +44,7 @@ While_it_is_beyond_the__.md
 conclusion.md
 Simulations_can_be_a_powerful__.md
 Methods__.md
+In_order_to_easily_generate__.md
 Datasets_Each_of_the_datasets__.md
 Acknowledgements_This_research_is_supported__.md
 Funding__.md
@@ -56,4 +55,3 @@ figures/lun2_model/lun2_model.png
 figures/mean-zeros/mean-zeros.png
 figures/disp_estimates/disp_estimates.png
 figures/nonlinear_gene/nonlinear_gene.png
-begin_table_caption_label_tab__1.tex
