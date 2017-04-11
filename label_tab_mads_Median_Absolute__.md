@@ -1,4 +1,4 @@
-\label{tab:mads}Median Absolute Deviations
+Table: Median Absolute Deviations
 
 |Dataset |Simulation |     LibSize|  Mean| MeanVar| MeanZeros| Variance| ZerosCell| ZerosGene|
 |:-------|:----------|-----------:|-----:|-------:|---------:|--------:|---------:|---------:|
