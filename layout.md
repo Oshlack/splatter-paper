@@ -29,7 +29,7 @@ figures/overall_tung/overall_tung_top.png
 We_compare_the_means_variances__.md
 figures/overall_tung_bottom/overall_tung_bottom (1).png
 While_this_view_allows_us__.md
-figures/datasets_heatmap/datasets_heatmap (1).png
+figures/datasets_heatmap/datasets_heatmap (2).png
 Looking_across_the_datasets_we__.md
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
