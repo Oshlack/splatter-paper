@@ -296,19 +296,33 @@ Groups
 
 ```{r groups}
 sim.groups <- splatSimulateGroups(groupCells = c(200, 100, 80, 20, 300, 120),
-                                  de.prob = c(0.005, 0.005, 0.008, 0.005, 0.006, 0.005),
-                                  dropout.present = FALSE)
+                                  de.prob = c(0.05, 0.05, 0.08, 0.05, 0.06,
+                                              0.05), de.facLoc = 0.1,
+                                  de.facScale = 0.4,
+                                  dropout.present = TRUE,
+                                  seed = 1)
 sim.groups <- plotPCA(sim.groups, return_SCESet = TRUE, draw_plot = FALSE)
 ```
 
 ```{r groups-PCA}
-data.frame(PC1 = reducedDimension(sim.groups)[, 1],
+pca.groups <- data.frame(PC1 = reducedDimension(sim.groups)[, 1],
            PC2 = reducedDimension(sim.groups)[, 2],
            group = pData(sim.groups)$Group) %>%
     ggplot(aes(x = PC1, y = PC2, colour = group)) +
-    geom_point(size = 4) +
+    geom_point(size = 1.5) +
     scale_color_manual(values = my.pal, name = "Group") +
-    ggtitle("Simulation with groups")
+    guides(col = guide_legend(ncol = 1)) +
+    ggtitle("Simulation with groups") +
+    #theme_minimal() +
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 20, hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points"),
+    )
+
+pca.groups
 ```
 
 ```{r groups-PCA-notitle}
@@ -326,13 +340,15 @@ Paths
 
 ```{r paths}
 sim.paths <- splatSimulatePaths(groupCells = c(100, 100, 100),
-                                path.from = c(0, 1, 1),
-                                dropout.present = FALSE, seed = 10)
+                                path.from = c(0, 1, 1), de.facLoc = 0.3,
+                                de.facScale = 0.6,
+                                dropout.present = FALSE,
+                                seed = 10)
 sim.paths <- plotPCA(sim.paths, return_SCESet = TRUE, draw_plot = FALSE)
 ```
 
 ```{r paths-PCA}
-data.frame(PC1 = reducedDimension(sim.paths)[, 1],
+pca.paths <- data.frame(PC1 = reducedDimension(sim.paths)[, 1],
            PC2 = reducedDimension(sim.paths)[, 2],
            group = pData(sim.paths)$Group,
            step = pData(sim.paths)$Step) %>%
@@ -342,7 +358,17 @@ data.frame(PC1 = reducedDimension(sim.paths)[, 1],
                           high = mcriPalette("themes")[1],
                           name = "Step") +
     scale_shape_manual(name = "Path", values = c(16, 17, 18)) +
-    ggtitle("Simulation with paths")
+    ggtitle("Simulation with paths") +
+    #theme_minimal() +
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 20, hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(15, "points"),
+    )
+
+pca.paths
 ```
 
 ```{r paths-PCA-notitle}
@@ -357,6 +383,14 @@ data.frame(PC1 = reducedDimension(sim.paths)[, 1],
                           name = "Step") +
     scale_shape_manual(name = "Path", values = c(16, 17, 18))
 ```
+
+```{r}
+panel <- plot_grid(pca.groups, pca.paths, labels = "AUTO")
+panel
+
+save_plot("../output/complex.pdf", panel, ncol = 2, nrow = 1, base_height = 6)
+```
+
 
 Session info
 ============

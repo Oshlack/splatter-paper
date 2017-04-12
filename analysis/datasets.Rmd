@@ -29,9 +29,12 @@ knitr::opts_chunk$set(autodep        = TRUE,
 library("scater")
 library("splatter")
 
+library("BiocParallel")
+
 # Plotting
 library("mcriPalettes")
 library("cowplot")
+library("magick")
 
 library("tidyverse")
 ```
@@ -77,6 +80,516 @@ datasets
 cc <- apply(datasets, 1, loadDataset, root = root)
 ```
 
+```{r}
+simDataset <- function(dataset, root) {
+    set.seed(1)
+    message("***LOADING COUNTS***")
+    counts <- loadDataset(dataset, root)
+    counts <- counts[rowSums(counts) > 0, ]
+    na.rows <- which(rowSums(is.na(counts)) > 0)
+    if (length(na.rows) > 0) {
+        counts <- counts[-na.rows, ]
+    }
+    counts <- counts[, sample(1:ncol(counts), 200)]
+    
+    sims <- list(Real = newSCESet(countData = counts))
+    
+    message("***ADDING SPLAT***")
+    params <- splatEstimate(counts)
+    sims$Splat <- splatSimulate(params, dropout.present = FALSE,
+                                verbose = FALSE)
+    sims$SplatDrop <- splatSimulate(params, dropout.present = TRUE,
+                                    verbose = FALSE)
+    
+    message("***ADDING SIMPLE***")
+    params <- simpleEstimate(counts)
+    sims$Simple <- simpleSimulate(params, verbose = FALSE)
+    
+    message("***ADDING LUN***")
+    params <- lunEstimate(counts)
+    sims$Lun <- lunSimulate(params, verbose = FALSE)
+    
+    message("***ADDING SCDD***")
+    params <- scDDEstimate(counts, conditions = sample(1:2, ncol(counts),
+                                                       replace = TRUE))
+    
+    half.nGenes <- round(nrow(counts) / 2)
+    sim.scDD <- scDDSimulate(params, nCells = round(ncol(counts) / 2),
+                             nDE = 0, nDP = 0, nDM = 0, nDB = 0,
+                             nEE = half.nGenes,
+                             nEP = nrow(counts) - half.nGenes,
+                             seed = 1, verbose = FALSE)
+    sims$scDD <- sim.scDD
+    
+    bp <- BiocParallel::MulticoreParam(10, progressbar = TRUE)
+    message("***ADDING LUN2***")
+    params <- lun2Estimate(counts, plate = sample(1:2, ncol(counts),
+                                                  replace = TRUE),
+                               min.size = 20, BPPARAM = bp)
+    sims$Lun2 <- lun2Simulate(params, nGenes = nrow(counts), verbose = FALSE)
+    sims$Lun2ZINB <- lun2Simulate(params, nGenes = nrow(counts), zinb = TRUE,
+                                  verbose = FALSE)
+    
+    #cols = c("#00ADEF", "#EC008C", "#fddaec", "#ccebc5", "#fbb4ae", "#b3cde3",
+    #         "#fed9a6", "#ffffcc")
+    
+    message("***COMPARING DATASETS***")
+    comp <- compareSCESets(sims, point.size = 0.2)
+    diff <- diffSCESets(sims, ref = "Real", point.size = 0.2)
+    
+    return(list(Comp = comp, Diff = diff))
+}
+
+#bpparam <- MulticoreParam(10)
+
+#datasets.sel <- datasets[c(2, 5, 7, 8, 11), ]
+
+#comps <- lapply(1:nrow(datasets.sel), function(idx) {
+#    dataset <- datasets.sel[idx, ]
+#    message("#### STARTING ", dataset["Dataset"], "####")
+#    tt <- system.time(comp <- simDataset(dataset, root))[3]
+#    message("#### DONE ", tt, "####")
+#    return(comp)})
+```
+
+```{r}
+#datasets[c(2, 5, 7, 8, 11), ]
+
+dataset <- datasets[2, ]
+message("#### STARTING ", dataset["Dataset"], "####")
+tt <- system.time(res.camp <- simDataset(dataset, root))[3]
+message("#### DONE ", tt, "####")
+
+dataset <- datasets[5, ]
+message("#### STARTING ", dataset["Dataset"], "####")
+tt <- system.time(res.klein <- simDataset(dataset, root))[3]
+message("#### DONE ", tt, "####")
+
+dataset <- datasets[7, ]
+message("#### STARTING ", dataset["Dataset"], "####")
+tt <- system.time(res.tung <- simDataset(dataset, root))[3]
+message("#### DONE ", tt, "####")
+
+dataset <- datasets[8, ]
+message("#### STARTING ", dataset["Dataset"], "####")
+tt <- system.time(res.zeisel <- simDataset(dataset, root))[3]
+message("#### DONE ", tt, "####")
+
+dataset <- datasets[11, ]
+message("#### STARTING ", dataset["Dataset"], "####")
+tt <- system.time(res.engel <- simDataset(dataset, root))[3]
+message("#### DONE ", tt, "####")
+```
+
+```{r}
+saveRDS(res.camp, file = "../output/res_camp.Rds")
+saveRDS(res.klein, file = "../output/res_klein.Rds")
+saveRDS(res.tung, file = "../output/res_tung.Rds")
+saveRDS(res.zeisel, file = "../output/res_zeisel.Rds")
+saveRDS(res.engel, file = "../output/res_engel.Rds")
+```
+
+
+```{r}
+makePanel <- function(comp) {
+    p1 <- comp$Plots$Means + theme(legend.position = "none",
+                                   axis.title.x = element_blank())
+    p2 <- comp$Plots$Variances + theme(legend.position = "none",
+                                       axis.title.x = element_blank())
+    p3 <- comp$Plots$MeanVar + theme(legend.position = "none")
+    p4 <- comp$Plots$LibrarySizes + theme(legend.position = "none",
+                                          axis.title.x = element_blank())
+    p5 <- comp$Plots$ZerosGene + theme(legend.position = "none",
+                                       axis.title.x = element_blank())
+    p6 <-  comp$Plots$ZerosCell + theme(legend.position = "none",
+                                        axis.title.x = element_blank())
+    p7 <- comp$Plots$MeanZeros + theme(legend.position = "none")
+    leg <- get_legend(p1 + theme(legend.position = "bottom"))
+    comb.plt <- plot_grid(p1, p2, p3, p4, p5, p6, p7, leg, align = "v",
+                          ncol = 2,
+                          labels = c("A", "B", "C", "D", "E", "F", "G", ""))
+    return(comb.plt)
+}
+
+makeDiffPanel <- function(diff) {
+    p1 <- diff$Plots$Means + theme(legend.position = "none",
+                                   axis.title.x = element_blank())
+    p2 <- diff$QQPlots$Means + theme(legend.position = "none")
+    p3 <- diff$Plots$Variances + theme(legend.position = "none",
+                                   axis.title.x = element_blank())
+    p4 <- diff$QQPlots$Variances + theme(legend.position = "none")
+    p5 <- diff$Plots$ZerosGene + theme(legend.position = "none",
+                                   axis.title.x = element_blank())
+    p6 <- diff$QQPlots$ZerosGene + theme(legend.position = "none")
+    p7 <- diff$Plots$ZerosCell + theme(legend.position = "none",
+                                   axis.title.x = element_blank())
+    p8 <- diff$QQPlots$ZerosCell + theme(legend.position = "none")
+    p9 <- diff$Plots$MeanVar + theme(legend.position = "none")
+    p10 <- diff$Plots$MeanZeros + theme(legend.position = "none")
+    
+    leg <- get_legend(p1 + theme(legend.position = "bottom"))
+    
+    mean.panel <- plot_grid(p1, p2, ncol = 2, align = "h")
+    var.panel <- plot_grid(p3, p4, ncol = 2, align = "h")
+    mean.var <- plot_grid(p9)
+    zgene.panel <- plot_grid(p5, p6, ncol = 2, align = "h")
+    zcell.panel <- plot_grid(p7, p8, ncol = 2, align = "h")
+    mean.zeros <- plot_grid(p10)
+    
+    diff.plt <- plot_grid(mean.panel, var.panel, mean.var, zgene.panel,
+                          zcell.panel, mean.zeros, leg, align = "v",
+                          ncol = 1, vjust = 0,
+                          labels = c("Means", "Variances", "Mean-Variance",
+                                     "Zeros (gene)", "Zeros (cell)",
+                                     "Mean-Zeros", ""),
+                          rel_heights = c(1, 1, 1.2, 1, 1, 1.2, 0.3))
+    return(diff.plt)
+}
+```
+
+```{r}
+plt <- makeOverallPanel(res.camp$Comp, res.camp$Diff, title = "Camp")
+save_plot("../output/overall_camp.png", plt, ncol = 4, nrow = 7)
+
+plt <- makeOverallPanel(res.klein$Comp, res.klein$Diff, title = "Klein")
+save_plot("../output/overall_klein.png", plt, ncol = 4, nrow = 7)
+
+plt <- makeOverallPanel(res.tung$Comp, res.tung$Diff, title = "Tung")
+save_plot("../output/overall_tung.png", plt, ncol = 4, nrow = 7)
+
+plt <- makeOverallPanel(res.zeisel$Comp, res.zeisel$Diff, title = "Zeisel")
+save_plot("../output/overall_zeisel.png", plt, ncol = 4, nrow = 7)
+
+plt <- makeOverallPanel(res.engel$Comp, res.engel$Diff, title = "Engel")
+save_plot("../output/overall_engel.png", plt, ncol = 4, nrow = 7)
+```
+
+```{r}
+img <- image_read("../output/overall_tung.png")
+# Get top
+img.top <- image_crop(img, "5280x4720")
+# Get bottom (without legend)
+img.bot <- image_crop(img, "5280x3500+0+4720")
+# Output
+image_write(img.top, "../output/overall_tung_top.png", format = "png")
+image_write(img.bot, "../output/overall_tung_bottom.png", format = "png")
+```
+
+```{r}
+plots <- list(MeansComp   = res.tung$Comp$Plots$Means,
+              MeansDiff   = res.tung$Diff$Plots$Means,
+              VarsComp    = res.tung$Comp$Plots$Variances,
+              VarsDiff    = res.tung$Diff$Plots$Variances,
+              MeanVarComp = res.tung$Comp$Plots$MeanVar,
+              MeanVarDiff = res.tung$Diff$Plots$MeanVar,
+              LibSizeComp = res.tung$Comp$Plots$LibrarySizes,
+              LibSizeDiff = res.tung$Diff$Plots$LibrarySizes)
+
+cols <- RColorBrewer::brewer.pal(8, "Dark2")
+
+for (idx in seq_along(plots)) {
+    name <- names(plots)[idx]
+    plot <- plots[[idx]]
+    
+    plot <- plot +
+        theme_cowplot(font_size = 12) +
+        theme(legend.position = "none")
+    
+    if (grepl("Comp", name)) {
+        plot <- plot + scale_color_manual(values = cols) + 
+            scale_fill_manual(values = cols)
+    } else {
+        plot <- plot + scale_color_manual(values = cols[-1]) + 
+            scale_fill_manual(values = cols[-1])
+    }
+    
+    if (!grepl("MeanVar", names(plots[idx]))) {
+        plot <- plot + geom_boxplot(aes(fill = Dataset),
+                                    size = 1.5, alpha = 0.2) + 
+            theme(axis.title.x = element_blank(),
+                  axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+    }
+    
+    plots[[idx]] <- plot
+}
+
+leg <- get_legend(plots[["MeanVarComp"]] + theme(legend.position = "bottom"))
+
+panel <- ggdraw() +
+    #draw_label("Comparison", 0.5, 0.98, fontface = "bold", size = 18) +
+    draw_label("A", 0.01, 0.986,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeansComp,  0.00, 0.77, 0.49, 0.23) +
+    draw_label("B", 0.51, 0.986,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeansDiff,  0.51, 0.77, 0.49, 0.23) +
+    draw_label("C", 0.01, 0.746,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$VarsComp,  0.00, 0.53, 0.49, 0.23) +
+    draw_label("D", 0.51, 0.746,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$VarsDiff,  0.51, 0.53, 0.49, 0.23) +
+    draw_label("E", 0.01, 0.506,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeanVarComp,  0.00, 0.29, 0.49, 0.23) +
+    draw_label("F", 0.51, 0.506,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeanVarDiff,  0.51, 0.29, 0.49, 0.23) +
+    draw_label("G", 0.01, 0.266,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$LibSizeComp,  0.00, 0.05, 0.49, 0.23) +
+    draw_label("H", 0.51, 0.266,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$LibSizeDiff, 0.51, 0.05, 0.49, 0.23) +
+    draw_plot(leg, 0.00, 0.00, 1.00, 0.04)
+
+save_plot("../output/tung_comparison.png", panel, ncol = 2, nrow = 4)
+```
+
+```{r}
+plots <- list(ZerosCellComp = res.tung$Comp$Plots$ZerosCell,
+              ZerosCellDiff = res.tung$Diff$Plots$ZerosCell,
+              ZerosGeneComp = res.tung$Comp$Plots$ZerosGene,
+              ZerosGeneDiff = res.tung$Diff$Plots$ZerosGene,
+              MeanZerosComp = res.tung$Comp$Plots$MeanZeros,
+              MeanZerosDiff = res.tung$Diff$Plots$MeanZeros)
+
+for (idx in seq_along(plots)) {
+    name <- names(plots)[idx]
+    plot <- plots[[idx]]
+    
+    plot <- plot +
+        theme_cowplot(font_size = 12) +
+        theme(legend.position = "none")
+    
+    if (grepl("Comp", name)) {
+        plot <- plot + scale_color_manual(values = cols) + 
+            scale_fill_manual(values = cols)
+    } else {
+        plot <- plot + scale_color_manual(values = cols[-1]) + 
+            scale_fill_manual(values = cols[-1])
+    }
+    
+    if (!grepl("MeanZeros", names(plots[idx]))) {
+        plot <- plot + geom_boxplot(aes(fill = Dataset),
+                                    size = 1.5, alpha = 0.2) + 
+            theme(axis.title.x = element_blank(),
+                  axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+    }
+    
+    plots[[idx]] <- plot
+}
+
+leg <- get_legend(plots[["MeanVarComp"]] + theme(legend.position = "bottom"))
+
+panel <- ggdraw() +
+    #draw_label("Comparison", 0.5, 0.98, fontface = "bold", size = 18) +
+    draw_label("A", 0.01, 0.982,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$ZerosCellComp,  0.00, 0.69, 0.49, 0.31) +
+    draw_label("B", 0.51, 0.982,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$ZerosCellDiff,  0.51, 0.69, 0.49, 0.31) +
+    draw_label("C", 0.01, 0.662,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$ZerosGeneComp,  0.00, 0.37, 0.49, 0.31) +
+    draw_label("D", 0.51, 0.662,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$ZerosGeneDiff,  0.51, 0.37, 0.49, 0.31) +
+    draw_label("E", 0.01, 0.342,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeanZerosComp,  0.00, 0.05, 0.49, 0.31) +
+    draw_label("F", 0.51, 0.342,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeanZerosDiff,  0.51, 0.05, 0.49, 0.31) +
+    draw_plot(leg, 0.00, 0.00, 1.00, 0.04)
+
+save_plot("../output/tung_zeros.png", panel, ncol = 2, nrow = 3)
+```
+
+```{r}
+summariseDiff <- function(diff) {
+
+    dataset.names <- unique(diff$PhenoData$Dataset)
+
+    fData.mads <- sapply(dataset.names, function(dataset) {
+        df <- diff$FeatureData[diff$FeatureData$Dataset == dataset, ]
+        mean <- median(abs(df$RankDiffMeanLogCPM))
+        var <- median(abs(df$RankDiffVarLogCPM))
+        zeros <- median(abs(df$RankDiffZeros))
+        mean.var <- median(abs(df$MeanRankVarDiff))
+        mean.zeros <- median(abs(df$MeanRankZerosDiff))
+        return(c(Mean = mean, Variance = var, ZerosGene = zeros,
+                 MeanVar = mean.var, MeanZeros = mean.zeros))
+    })
+
+    pData.mads <- sapply(dataset.names, function(dataset) {
+        df <- diff$PhenoData[diff$PhenoData$Dataset == dataset, ]
+        lib.size <- median(abs(df$RankDiffLibSize))
+        zeros <- median(abs(df$RankDiffZeros))
+        return(c(LibSize = lib.size, ZerosCell = zeros))
+    })
+
+    mads <- data.frame(Dataset = dataset.names, t(fData.mads), t(pData.mads))
+    
+    fData.ranks <- matrixStats::rowRanks(fData.mads)
+    pData.ranks <- matrixStats::rowRanks(pData.mads)
+
+    ranks <- data.frame(Dataset = dataset.names, t(fData.ranks), t(pData.ranks))
+    colnames(ranks) <- paste0(colnames(mads), "Rank")
+
+    mads.long <- stats::reshape(mads, varying = 2:8, direction = "long",
+                                idvar = "Dataset", timevar = "Statistic",
+                                times = colnames(mads)[2:8], v.names = "MAD")
+
+    ranks.long <- stats::reshape(ranks, varying = 2:8, direction = "long",
+                                 idvar = "Dataset", timevar = "Statistic",
+                                 times = colnames(ranks)[2:8], v.names = "Rank")
+
+    long <- data.frame(mads.long, Rank = ranks.long$Rank)
+    row.names(long) <- NULL
+
+    summary <- list(MADs = mads, Ranks = ranks, Long = long)
+
+    return(summary)
+}
+```
+
+
+```{r}
+summary <- vector(length = 5, mode = "list")
+
+names <- c("Camp", "Tung", "Klein", "Zeisel", "Engel")
+i = 1
+for (diff in list(res.camp$Diff, res.tung$Diff, res.klein$Diff, res.zeisel$Diff,
+                  res.engel$Diff)) {
+    summ <- summariseDiff(diff)$Long
+    colnames(summ)[1] <- "Simulation"
+    summ <- data.frame(Dataset = names[i], summ)
+    summary[[i]] <- summ
+    i = i + 1
+}
+
+summary <- bind_rows(summary)
+```
+
+```{r}
+cols = c("#EC008C", "#fddaec", "#ccebc5", "#fbb4ae", "#b3cde3", "#fed9a6",
+         "#ffffcc")
+ggplot(summary, aes(x = Statistic, y = Rank, colour = Simulation,
+                    group = Simulation)) +
+    geom_line() +
+    geom_point() +
+    scale_colour_manual(values = cols) +
+    scale_y_continuous(trans = "reverse") +
+    facet_grid(Dataset ~ ., scales = "free_y")
+```
+
+```{r}
+summary %>%
+    group_by(Simulation, Statistic) %>%
+    summarise(MAD = mean(MAD), Rank = mean(Rank)) %>%
+    ggplot(aes(x = Simulation, y = Statistic, fill = Rank)) +
+    geom_tile() +
+    viridis::scale_fill_viridis(direction = -1)
+```
+
+```{r}
+ggplot(summary, aes(x = Dataset, y = Statistic, fill = Rank)) +
+    geom_tile() +
+    viridis::scale_fill_viridis(direction = -1) +
+    facet_wrap(~ Simulation)
+```
+
+```{r}
+chrRound <- function(x, digits = 1) {
+
+    if(digits < 1) {
+        stop("This is intended for the case digits >= 1.")
+    }
+    
+    if(length(digits) > 1) {
+        digits <- digits[1]
+        warning("Digits should be a single integer. Only using digits[1].")
+    }
+    
+    rounded <- sprintf(paste("%.", digits, "f", sep = ""), x)
+        
+    # Convert "-0.00" to "0.00"
+    zero <- paste0("0.", paste(rep("0", digits), collapse = ""))
+    rounded[rounded == paste0("-", zero)] <- zero
+        
+    return(rounded)
+}
+```
+
+
+```{r}
+summary %>%
+    mutate(Statistic = factor(Statistic,
+                              levels = rev(c("Mean", "Variance", "MeanVar",
+                                         "LibSize", "ZerosCell", "ZerosGene",
+                                         "MeanZeros")))) %>%
+    mutate(Rank = factor(Rank)) %>%
+    mutate(MAD = chrRound(MAD, 2)) %>%
+    ggplot(aes(x = Simulation, y = Statistic, fill = Rank, label = MAD)) +
+    geom_tile() +
+    #geom_text(colour = "#ff8235", size = 3) +
+    viridis::scale_fill_viridis(direction = -1, discrete = TRUE) +
+    scale_x_discrete(labels = c("Splat" = "Splat",
+                                "SplatDrop" = "Splat (Dropout)",
+                                "Simple" = "Simple", "Lun" = "Lun",
+                                "Lun2" = "Lun2",
+                                "Lun2ZINB" = "Lun2 (ZINB)")) +
+    scale_y_discrete(labels = c("Mean" = "Mean", "Variance" = "Variance",
+                                "MeanVar" = "Mean-Variance",
+                                "LibSize" = "Library Size",
+                                "ZerosCell" = "% Zeros (Cell)",
+                                "ZerosGene" = "% Zeros (Gene)",
+                                "MeanZeros" = "Mean-Zeros")) +
+    ggtitle("Rank of MAD from real data") +
+    #facet_wrap(~ Dataset) +
+    guides(fill = guide_legend(ncol = 1)) +
+    facet_grid(Dataset ~ .) +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.title = element_blank(),
+          axis.text = element_text(size = 12),
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          panel.grid = element_blank(),
+          strip.text = element_text(size = 16, face = "bold"),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points"),
+          #legend.position = c(0.83, 0.20),
+          legend.position = "right",
+          #legend.direction = "horizontal")
+    )
+```
+
+```{r}
+ggsave("../output/datasets_heatmap.pdf", width = 20, height = 25, units = "cm")
+```
+
+
+```{r}
+datasets[c(2, 5, 7, 8, 11), ] %>%
+    select(Dataset, Species, CellType, Platform, Protocol, UMI, NumCells) %>%
+    arrange(Dataset) %>%
+    knitr::kable(format = "latex",
+                 caption = "Details of real datasets") %>%
+    cat(sep = "\n")
+```
+
+
+```{r}
+summary %>%
+    select(-Rank) %>%
+    spread(key = Statistic, value = MAD) %>%
+    knitr::kable(format = "latex", digits = 3,
+                 caption = "Median Absolute Deviations for all datasets") %>%
+    cat(sep = "\n")
+```
 
 
 Session info
