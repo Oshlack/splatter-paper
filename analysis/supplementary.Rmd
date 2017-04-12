@@ -1,0 +1,194 @@
+---
+title: "Supplementary"
+author: "Luke Zappia"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+Code version: `r system("git log -1 --format=oneline | cut -d' ' -f1", intern = TRUE)`
+
+```{r knitr, include = FALSE}
+DOCNAME = "supplementary"
+knitr::opts_chunk$set(autodep        = TRUE,
+                      cache          = TRUE,
+                      cache.path     = paste0("cache/", DOCNAME, "/"),
+                      cache.comments = TRUE,
+                      echo           = FALSE,
+                      error          = FALSE,
+                      fig.align      = "center",
+                      fig.path       = paste0("figures/", DOCNAME, "/"),
+                      fig.width      = 10,
+                      fig.height     = 8,
+                      dev            = c('svg', 'png'),
+                      message        = FALSE,
+                      warning        = FALSE)
+```
+
+```{r libraries}
+library("scater")
+library("splatter")
+library("tidyverse")
+```
+
+```{r source, cache = FALSE}
+source("../R/load_datasets.R")
+```
+
+Introduction
+============
+
+In this document we are going to create some supplementary figures.
+
+Mean-dropout
+------------
+
+```{r}
+root <- "/group/bioi1/shared/public_data/scRNA-seq"
+
+datasets <- read_tsv(file.path(root, "datasets.txt"),
+                     col_types = cols(.default = col_character(),
+                                      NumCells = col_integer()
+                                      )
+                     )
+
+real <- loadDataset(datasets[7, ], root)
+
+set.seed(1)
+real <- real[rowSums(real) > 0, ]
+real <- real[, sample(1:ncol(real), 200)]
+```
+
+```{r}
+logistic <- function(x, x0, k) {
+    1 / (1 + exp(-k * (x - x0)))
+}
+```
+
+```{r}
+counts <- real
+lib.sizes <- colSums(counts)
+lib.med <- median(lib.sizes)
+norm.counts <- t(t(counts) / lib.sizes * lib.med)
+norm.counts <- norm.counts[rowSums(norm.counts > 0) > 1, ]
+
+means <- rowMeans(norm.counts)
+x <- log(means)
+obs.zeros <- rowSums(norm.counts == 0)
+y <- obs.zeros / ncol(norm.counts)
+df <- data.frame(x, y)
+fit <- nls(y ~ logistic(x, x0 = x0, k = k), data = df,
+           start = list(x0 = 0, k = -1))
+mid <- summary(fit)$coefficients["x0", "Estimate"]
+shape <- summary(fit)$coefficients["k", "Estimate"]
+```
+
+```{r}
+gg <- ggplot(df, aes(x = x, y = y)) +
+    geom_point() +
+    stat_function(fun = logistic, args = list(x0 = mid, k = shape),
+                  colour = "red", size = 1) +
+    xlab("Mean expression") +
+    ylab("Proportion zeros") +
+    ggtitle("Fit of mean-zeros relationship") +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(15, "points")
+    )
+
+gg
+ggsave("../output/mean-zeros.png", width = 8, height = 5)
+```
+
+```{r}
+sim <- splatSimulatePaths()
+```
+
+
+Dispersion estimation
+---------------------
+
+```{r}
+# Dummy design matrix
+design <- matrix(1, 100, 1)
+disps <- sapply(seq(0.01, 2, length.out = 10), function(disp) {
+    sim <- splatSimulate(bcv.common = disp, verbose = FALSE, seed = 1)
+    est <- edgeR::estimateDisp(counts(sim), design = design)
+    return(c(Disp = disp, Est = est$common.dispersion))
+})
+```
+
+```{r}
+gg <- disps %>%
+    t() %>%
+    data.frame() %>%
+    rename(edgeR = Est) %>%
+    mutate(Corrected = 0.1 + 0.25 * edgeR) %>%
+    gather(key = Estimate, value = Value, -Disp) %>%
+    mutate(Estimate = factor(Estimate, levels = c("edgeR", "Corrected"))) %>%
+    ggplot(aes(x = Disp, y = Value, colour = Estimate)) +
+    geom_abline(intercept = 0, slope = 1, colour = "red", size = 1) +
+    geom_point(size = 3) +
+    scale_color_brewer(palette = "Dark2") +
+    xlab("Simulated dispersion") +
+    ylab("Estimated dispersion") +
+    ggtitle("Dispersion estimates") +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(15, "points")
+    )
+
+gg
+ggsave("../output/disp_estimates.png", width = 8, height = 5)
+```
+
+
+```{r}
+sim <- splatSimulatePaths(de.facLoc = 0.1, de.facScale = 0.4, seed = 1)
+cpm(sim) <- edgeR::cpm(counts(sim))
+
+fData(sim) %>%
+    filter(DEFacPath1 == 1, SigmaFacPath1 != 0) %>%
+    arrange(-GeneMean) %>% head
+
+gene <- "Gene4655"
+gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$Step) %>%
+    ggplot(aes(x = Step, y = CPM)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    ggtitle("Example non-linear gene") +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(15, "points")
+    )
+
+gg
+ggsave("../output/nonlinear_gene.png", width = 8, height = 5)
+```
+
+
+Session info
+============
+
+```{r session-info, cache = FALSE}
+devtools::session_info()
+```
+
+```{r cleanup-docs, cache = FALSE}
+doc.files <- c(list.files(pattern = "pdf"),
+               list.files(pattern = "html"),
+               list.files(pattern = "docx"))
+
+for (file in doc.files) {
+    file.rename(file, file.path("docs", file))
+}
+```
+

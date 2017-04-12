@@ -68,7 +68,7 @@ loadDataset <- function(dataset, root) {
 
         counts <- dplyr::select(counts, -X1)
         counts <- as.matrix(counts)
-        counts <- apply(counts, 1, as.numeric)
+        counts <- apply(counts, 2, as.numeric)
     } else if (dataset["Dataset"] == "Zieg") {
         counts <- readr::read_tsv(file,
                                   col_types = readr::cols(
