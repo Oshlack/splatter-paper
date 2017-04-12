@@ -1,1 +1,1 @@
-# The Splatter framework
+## The Splatter framework

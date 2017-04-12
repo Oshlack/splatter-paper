@@ -4,6 +4,7 @@ The_first_decade_of_next__.md
 As_scRNA_seq_data_has__.md
 Existing_scRNA_seq_analysis_packages__.md
 In_this_paper_we_present__.md
+Results__.md
 The_Splatter_framework_Consistent_interface__.md
 Splatter_is_designed_to_provide__.md
 Simulation_models__.md
@@ -20,28 +21,38 @@ Splat__.md
 We_have_developed_the_Splat__.md
 begin_table_caption_Parameters_in__.tex
 figures/splat_model/splat_model.png
-Splat_parameter_estimation__.md
-To_make_it_easy_for__.md
 Comparison_of_simulations_Other_simulations__.md
-Figure_1_shows_the_output__.md
-figures/sim_comparison3/sim_comparison3.png
-figures/sim_comparison/sim_comparison (2).png
-The_Tung_dataset_orange_is__.md
+To_compare_the_simulation_models__.md
+begin_table_caption_label_tab__.tex
+No_quality_control_of_cells__.md
+figures/overall_tung/overall_tung_top.png
+We_compare_the_means_variances__.md
+figures/overall_tung_bottom/overall_tung_bottom (1).png
+While_this_view_allows_us__.md
+figures/datasets_heatmap/datasets_heatmap (2).png
+Looking_across_the_datasets_we__.md
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
 The_simulation_models_described_above__.md
 Simulating_paths_End_points_DE__.md
 An_alternative_situation_that_is__.md
+figures/complex/complex.png
 Example_using_Splatter_simulations_to__.md
 To_demonstrate_how_the_simulations__.md
 figures/clustering_results/clustering_results.png
 Figure_ref_fig_sc3_example__.md
-Clearly_this_evaluating_could_be__.md
+While_it_is_beyond_the__.md
 conclusion.md
-Simulated_datasets_are_a_useful__.md
+Simulations_can_be_a_powerful__.md
+Methods__.md
+Splat_parameter_estimation_In_order__.md
 Acknowledgements_This_research_is_supported__.md
 Funding__.md
 Supplementary_figures__.md
 figures/simple_model/simple_model.png
 figures/lun_model/lun_model.png
 figures/lun2_model/lun2_model.png
+figures/mean-zeros/mean-zeros.png
+figures/disp_estimates/disp_estimates.png
+figures/nonlinear_gene/nonlinear_gene.png
+begin_table_caption_label_tab__2.tex
