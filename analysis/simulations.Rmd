@@ -33,20 +33,14 @@ library("splatter")
 library("mcriPalettes")
 library("cowplot")
 
+# Tidyverse
 library("tidyverse")
 ```
 
 ```{r source, cache = FALSE}
-source("../R/load.R")
-source("../R/add_stats.R")
 ```
 
 ```{r ggtheme, cache = FALSE}
-#theme_doc <- ggplot2::theme_minimal(base_size = 18) +
-#             ggplot2::theme(panel.grid = ggplot2::element_blank(),
-#                            plot.title = ggplot2::element_text(size = 30))
-#ggplot2::theme_set(theme_doc)
-
 my.pal <- mcriPalettes::mcriPalette("themes")
 my.pal[4] <- "#F7DC5F"
 ```
@@ -54,230 +48,16 @@ my.pal[4] <- "#F7DC5F"
 Introduction
 ============
 
-In this document we are going to compare some of the simulations available in 
-Splatter to a real dataset and each other. The real data will come from the
-study "Batch effects and the effective design of single-cell gene expression
-studies" by Tung et al. Each simulation will estimate parameters from this
-dataset. The majority of this document will be a series of plots comparing the
-simulations.
-
-Data
-====
-
-The Tung dataset contains data from three individuals, each of which have been
-processed in three C1 plates. The reads have been aligned (using Subread) and
-counted both as individual reads and using the UMIs. For this comparison we
-are going to select a single individual (NA19239) and use the version of the
-data that already been filtered to remove bad cells and lowly expressed genes.
-We are also going to remove the ERCC spike-ins (because we won't simulate
-those).
-
-```{r real}
-datasets <- list()
-descrips <- list()
-
-real.name <- "Tung"
-real.desc <- "Single individual (filtered)"
-
-real <- loadTung(count = "molecules", version = "filter",
-                 individual = "NA19239", remove.ercc = TRUE)
-cpm(real) <- edgeR::cpm(counts(real))
-real <- addGeneStats(real, "counts")
-real <- addGeneStats(real, "cpm")
-real <- addGeneStats(real, "cpm", log = TRUE)
-real <- addIsZeroOutlier(real)
-
-datasets[[real.name]] <- real
-descrips[[real.name]] <- real.desc
-```
-
-After selecting an individual and filtering we are left with `r nrow(real)`
-genes and `r ncol(real)` cells in our real dataset.
-
-Simulations
-===========
-
-```{r splatter}
-sim.name <- "Splat"
-sim.desc <- "Splatter simulation"
-
-params <- splatEstimate(real)
-sim <- splatSimulate(params, dropout.present = FALSE, seed = 1)
-sim <- calculateQCMetrics(sim)
-
-datasets[[sim.name]] <- sim
-descrips[[sim.name]] <- sim.desc
-```
-
-```{r simple}
-sim.name <- "Simple"
-sim.desc <- "Simple negative-binomial"
-
-params <- simpleEstimate(real)
-sim <- simpleSimulate(params, seed = 1)
-sim <- calculateQCMetrics(sim)
-
-datasets[[sim.name]] <- sim
-descrips[[sim.name]] <- sim.desc
-```
-
-```{r lun}
-sim.name <- "Lun"
-sim.desc <- "Negative-binomial with cell factors"
-
-params <- lunEstimate(real)
-sim <- lunSimulate(params, seed = 1)
-sim <- calculateQCMetrics(sim)
-
-datasets[[sim.name]] <- sim
-descrips[[sim.name]] <- sim.desc
-```
-
-```{r lun2}
-sim.name <- "Lun 2"
-sim.desc <- "Negative-binomial with plate effects"
-
-params <- lun2Estimate(real, plates = factor(pData(real)$replicate),
-                       min.size = 50)
-sim <- lun2Simulate(params, seed = 1)
-sim <- calculateQCMetrics(sim)
-
-datasets[[sim.name]] <- sim
-descrips[[sim.name]] <- sim.desc
-```
-
-```{r scDD}
-sim.name <- "scDD"
-sim.desc <- "scDD simulation"
-
-params <- scDDEstimate(real,
-                       conditions = sample(1:2, ncol(real), replace = TRUE))
-sim <- scDDSimulate(params, nCells = round(ncol(real) / 2), nDE = 0, nDP = 0,
-                    nDM = 0, nDB = 0, nEE = nrow(real) / 2,
-                    nEP = nrow(real) / 2, seed = 1)
-sim <- calculateQCMetrics(sim)
-
-datasets[[sim.name]] <- sim
-descrips[[sim.name]] <- sim.desc
-```
-
-We are considering the following simulations:
-
-```{r sim-details, cache = FALSE}
-descrips <- unlist(descrips)
-details  <- data.frame(Dataset     = names(descrips),
-                       Type        = c("Real",
-                                       rep("Simulation", length(descrips) - 1)),
-                       Description = descrips)
-knitr::kable(details, row.names = FALSE)
-```
-
-```{r output-datasets}
-write_rds(datasets, "../output/datasets.Rds")
-```
-
-Comparison
-==========
-
-```{r compare}
-comp <- compareSCESets(datasets)
-
-comp$FeatureData$Dataset <- factor(comp$FeatureData$Dataset,
-                                   levels = names(datasets))
-comp$PhenoData$Dataset <- factor(comp$PhenoData$Dataset,
-                                 levels = names(datasets))
-```
-
-```{r output-compare}
-write_rds(comp, "../output/comparison.Rds")
-```
-
-Means
------
-
-```{r means}
-comp$Plots$Means
-```
-
-Variances
----------
-
-```{r variances}
-comp$Plots$Variances
-```
-
-Mean-variance
--------------
-
-```{r mean-var}
-comp$Plots$MeanVar
-```
-
-Library size
-------------
-
-```{r lib-size}
-comp$Plots$LibrarySizes
-```
-
-Zeros (genes)
--------------
-
-```{r zero-gene}
-comp$Plots$ZerosGene
-```
-
-Zeros (cells)
--------------
-
-```{r zero-cell}
-comp$Plots$ZerosCell
-```
-
-Mean-zeros
--------------
-
-```{r mean-zeros}
-comp$Plots$MeanZeros
-```
-
-Combined
---------
-
-```{r combine}
-p1 <- comp$Plots$Means + theme(legend.position = "none",
-                               axis.title.x = element_blank())
-p2 <- comp$Plots$Variances + theme(legend.position = "none",
-                                   axis.title.x = element_blank())
-p3 <- comp$Plots$MeanVar + theme(legend.position = "none")
-p4 <- comp$Plots$LibrarySizes + theme(legend.position = "none",
-                                      axis.title.x = element_blank())
-p5 <- comp$Plots$ZerosGene + theme(legend.position = "none",
-                                   axis.title.x = element_blank())
-p6 <-  comp$Plots$ZerosCell + theme(legend.position = "none",
-                                    axis.title.x = element_blank())
-p7 <- comp$Plots$MeanZeros + theme(legend.position = "none")
-leg <- get_legend(p1 + theme(legend.position = "bottom"))
-```
-
-```{r plot-combined}
-comb.plt <- plot_grid(p1, p2, p3, p4, p5, p6, p7, leg, align = "v", ncol = 2,
-                      labels = c("A", "B", "C", "D", "E", "F", "G", ""))
-#panel <- plot_grid(comb.plt, leg, ncol = 1, rel_heights = c(1, .05))
-panel <- comb.plt
-panel
-```
-
-```{r output-combined, cache = FALSE}
-save_plot("../output/sim_comparison.pdf", panel, ncol = 2, nrow = 4)
-save_plot("../output/sim_comparison.png", panel, ncol = 2, nrow = 4)
-```
+In this document we are going to demonstrate some of the types of simulations
+possible using the `Splat` simulation in `Splatter`.
 
 Different situations
 ==================
 
 Single
 ------
+
+Simulation of a single homogenous population of cells.
 
 ```{r single}
 sim.single <- splatSimulateSingle(groupCells = 200, dropout.present = FALSE)
@@ -293,6 +73,8 @@ data.frame(PC1 = reducedDimension(sim.single)[, 1],
 
 Groups
 ------
+
+Simulation of a sample with multiple types of cells.
 
 ```{r groups}
 sim.groups <- splatSimulateGroups(groupCells = c(200, 100, 80, 20, 300, 120),
@@ -313,7 +95,6 @@ pca.groups <- data.frame(PC1 = reducedDimension(sim.groups)[, 1],
     scale_color_manual(values = my.pal, name = "Group") +
     guides(col = guide_legend(ncol = 1)) +
     ggtitle("Simulation with groups") +
-    #theme_minimal() +
     theme_cowplot() +
     theme(plot.title = element_text(size = 20, hjust = 0.4),
           axis.text = element_text(size = 12),
@@ -325,18 +106,10 @@ pca.groups <- data.frame(PC1 = reducedDimension(sim.groups)[, 1],
 pca.groups
 ```
 
-```{r groups-PCA-notitle}
-data.frame(PC1 = reducedDimension(sim.groups)[, 1],
-           PC2 = reducedDimension(sim.groups)[, 2],
-           group = pData(sim.groups)$Group) %>%
-    ggplot(aes(x = PC1, y = PC2, colour = group)) +
-    geom_point(size = 4) +
-    scale_color_manual(values = my.pal, name = "Group")
-
-```
-
 Paths
 -----
+
+Simulation with a complex differentiation path.
 
 ```{r paths}
 sim.paths <- splatSimulatePaths(groupCells = c(100, 100, 100),
@@ -359,7 +132,6 @@ pca.paths <- data.frame(PC1 = reducedDimension(sim.paths)[, 1],
                           name = "Step") +
     scale_shape_manual(name = "Path", values = c(16, 17, 18)) +
     ggtitle("Simulation with paths") +
-    #theme_minimal() +
     theme_cowplot() +
     theme(plot.title = element_text(size = 20, hjust = 0.4),
           axis.text = element_text(size = 12),
@@ -371,26 +143,18 @@ pca.paths <- data.frame(PC1 = reducedDimension(sim.paths)[, 1],
 pca.paths
 ```
 
-```{r paths-PCA-notitle}
-data.frame(PC1 = reducedDimension(sim.paths)[, 1],
-           PC2 = reducedDimension(sim.paths)[, 2],
-           group = pData(sim.paths)$Group,
-           step = pData(sim.paths)$Step) %>%
-    ggplot(aes(x = PC1, y = PC2, colour = step, shape = group)) +
-    geom_point(size = 4) +
-    scale_colour_gradient(low = mcriPalette("themes")[2],
-                          high = mcriPalette("themes")[1],
-                          name = "Step") +
-    scale_shape_manual(name = "Path", values = c(16, 17, 18))
-```
+Complex simulations
+-------------------
 
-```{r}
+More the paper we want a panel showing the two kinds of complex simulations:
+groups and paths.
+
+```{r complex-panel}
 panel <- plot_grid(pca.groups, pca.paths, labels = "AUTO")
 panel
 
 save_plot("../output/complex.pdf", panel, ncol = 2, nrow = 1, base_height = 6)
 ```
-
 
 Session info
 ============
