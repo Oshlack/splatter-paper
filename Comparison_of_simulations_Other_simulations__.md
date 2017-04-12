@@ -1,1 +1,1 @@
-# Comparison of simulations
+## Comparison of simulations
