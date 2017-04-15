@@ -346,14 +346,3 @@ Session info
 ```{r session-info, cache = FALSE}
 devtools::session_info()
 ```
-
-```{r cleanup-docs, cache = FALSE}
-doc.files <- c(list.files(pattern = "pdf"),
-               list.files(pattern = "html"),
-               list.files(pattern = "docx"))
-
-for (file in doc.files) {
-    file.rename(file, file.path("docs", file))
-}
-```
-
