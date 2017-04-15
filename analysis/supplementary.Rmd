@@ -13,7 +13,7 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       cache          = TRUE,
                       cache.path     = paste0("cache/", DOCNAME, "/"),
                       cache.comments = TRUE,
-                      echo           = FALSE,
+                      echo           = TRUE,
                       error          = FALSE,
                       fig.align      = "center",
                       fig.path       = paste0("figures/", DOCNAME, "/"),
@@ -25,13 +25,20 @@ knitr::opts_chunk$set(autodep        = TRUE,
 ```
 
 ```{r libraries}
+# RNA-seq
 library("scater")
 library("splatter")
+
+# Plotting
+library("cowplot")
+
+# Tidyverse
 library("tidyverse")
 ```
 
 ```{r source, cache = FALSE}
 source("../R/load_datasets.R")
+source("../R/utils.R")
 ```
 
 Introduction
@@ -39,10 +46,9 @@ Introduction
 
 In this document we are going to create some supplementary figures.
 
-Mean-dropout
-------------
+We start by loading the Tung data which will be as our real dataset.
 
-```{r}
+```{r real}
 root <- "/group/bioi1/shared/public_data/scRNA-seq"
 
 datasets <- read_tsv(file.path(root, "datasets.txt"),
@@ -58,31 +64,38 @@ real <- real[rowSums(real) > 0, ]
 real <- real[, sample(1:ncol(real), 200)]
 ```
 
-```{r}
-logistic <- function(x, x0, k) {
-    1 / (1 + exp(-k * (x - x0)))
-}
-```
+Mean-dropout
+============
 
-```{r}
+The first supplementary figure is an example of fitting the logistic function
+to the relationship between mean expression the of percentage of zero counts
+in a gene. We fit the relationship to the Tung data...
+
+```{r mean-dropout}
+# Get library size normalised counts
 counts <- real
 lib.sizes <- colSums(counts)
 lib.med <- median(lib.sizes)
 norm.counts <- t(t(counts) / lib.sizes * lib.med)
 norm.counts <- norm.counts[rowSums(norm.counts > 0) > 1, ]
 
+# Calculate the means and zeros percentage
 means <- rowMeans(norm.counts)
 x <- log(means)
 obs.zeros <- rowSums(norm.counts == 0)
 y <- obs.zeros / ncol(norm.counts)
 df <- data.frame(x, y)
+
+# Fit the logistic function
 fit <- nls(y ~ logistic(x, x0 = x0, k = k), data = df,
            start = list(x0 = 0, k = -1))
 mid <- summary(fit)$coefficients["x0", "Estimate"]
 shape <- summary(fit)$coefficients["k", "Estimate"]
 ```
 
-```{r}
+...then make the plot.
+
+```{r mean-zeros-plot}
 gg <- ggplot(df, aes(x = x, y = y)) +
     geom_point() +
     stat_function(fun = logistic, args = list(x0 = mid, k = shape),
@@ -90,27 +103,26 @@ gg <- ggplot(df, aes(x = x, y = y)) +
     xlab("Mean expression") +
     ylab("Proportion zeros") +
     ggtitle("Fit of mean-zeros relationship") +
-    theme_minimal() +
-    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 20, hjust = 0.4),
           axis.text = element_text(size = 12),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
-          legend.key.size = unit(15, "points")
+          legend.key.size = unit(25, "points"),
     )
 
 gg
 ggsave("../output/mean-zeros.png", width = 8, height = 5)
 ```
 
-```{r}
-sim <- splatSimulatePaths()
-```
-
-
 Dispersion estimation
----------------------
+=====================
 
-```{r}
+The second supplementary plot shows the correction we have applied to the
+dispersion estimates from `edgeR`. Here we simulate data with a variety of
+dispersions, use `edgeR` to estimate them then apply the correction.
+
+```{r disps}
 # Dummy design matrix
 design <- matrix(1, 100, 1)
 disps <- sapply(seq(0.01, 2, length.out = 10), function(disp) {
@@ -120,7 +132,10 @@ disps <- sapply(seq(0.01, 2, length.out = 10), function(disp) {
 })
 ```
 
-```{r}
+Then we can plot both the raw and correcte estimates against the true simulated
+values.
+
+```{r dips-plot}
 gg <- disps %>%
     t() %>%
     data.frame() %>%
@@ -147,15 +162,25 @@ gg
 ggsave("../output/disp_estimates.png", width = 8, height = 5)
 ```
 
+Non-linear genes
+================
 
-```{r}
+Another supplementary figure shows an example of a simulated gene with
+non-linear changes in expression over the course of a differentiation
+trajectory. We simulate a path and then filter out some of the non-linear genes.
+
+```{r non-linear}
 sim <- splatSimulatePaths(de.facLoc = 0.1, de.facScale = 0.4, seed = 1)
 cpm(sim) <- edgeR::cpm(counts(sim))
 
 fData(sim) %>%
     filter(DEFacPath1 == 1, SigmaFacPath1 != 0) %>%
     arrange(-GeneMean) %>% head
+```
 
+Then we select one to plot.
+
+```{r non-linear-plot}
 gene <- "Gene4655"
 gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$Step) %>%
     ggplot(aes(x = Step, y = CPM)) +
@@ -173,7 +198,6 @@ gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$S
 gg
 ggsave("../output/nonlinear_gene.png", width = 8, height = 5)
 ```
-
 
 Session info
 ============
