@@ -65,7 +65,7 @@ We have a variety of real datasets we could use. Let's load the metadata file
 and take a look.
 
 ```{r datasets}
-root <- "/group/bioi1/shared/public_data/scRNA-seq"
+root <- "../data"
 datasets <- read_tsv(file.path(root, "datasets.txt"),
                      col_types = cols(.default = col_character(),
                                       NumCells = col_integer()
@@ -74,18 +74,13 @@ datasets <- read_tsv(file.path(root, "datasets.txt"),
 datasets
 ```
 
-This is a lot of datasets to consider so we are going to select a subset that
-covers different species, cell types, platforms, processing etc.
-
-```{r datasets-selected}
-selected <- c(2, 5, 7, 8, 11)
-datasets[selected, ]
-```
+These five datasets cover a variety of different species, cell types, platforms,
+processing etc.
 
 For the paper we need a table, which I am going to save in LaTeX format.
 
 ```{r datasets-table}
-datasets[selected, ] %>%
+datasets %>%
     select(Dataset, Species, CellType, Platform, Protocol, UMI, NumCells) %>%
     arrange(Dataset) %>%
     kable(format = "latex", caption = "Details of real datasets") %>%
@@ -104,7 +99,7 @@ bp <- BiocParallel::MulticoreParam(10)
 
 res <- list()
 
-for (idx in selected) {
+for (idx in seq_along(nrow(datasets))) {
     dataset <- datasets[idx, ]
     name <- unlist(dataset["Dataset"])
     comp <- simCompDataset(dataset, root, bp = bp)

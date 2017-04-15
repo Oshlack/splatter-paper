@@ -1,6 +1,7 @@
 loadDataset <- function(dataset, root) {
 
-    file <- file.path(root, dataset["Path"], dataset["CountsFile"])
+    #file <- file.path(root, dataset["Path"], dataset["CountsFile"])
+    file <- file.path(root, dataset["CountsFile"])
 
     if (dataset["BpipePipeline"] == "Yes") {
         counts <- readr::read_tsv(file, comment = "#",
