@@ -30,7 +30,6 @@ library("scater")
 library("splatter")
 
 # Plotting
-library("mcriPalettes")
 library("cowplot")
 
 # Tidyverse
@@ -38,10 +37,11 @@ library("tidyverse")
 ```
 
 ```{r source, cache = FALSE}
+source("../R/utils.R")
 ```
 
 ```{r ggtheme, cache = FALSE}
-my.pal <- mcriPalettes::mcriPalette("themes")
+my.pal <- mcriPalette("themes")
 my.pal[4] <- "#F7DC5F"
 ```
 
