@@ -108,7 +108,7 @@ gg <- ggplot(df, aes(x = x, y = y)) +
           axis.text = element_text(size = 12),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
-          legend.key.size = unit(25, "points"),
+          legend.key.size = unit(25, "points")
     )
 
 gg
@@ -150,12 +150,12 @@ gg <- disps %>%
     xlab("Simulated dispersion") +
     ylab("Estimated dispersion") +
     ggtitle("Dispersion estimates") +
-    theme_minimal() +
-    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 20, hjust = 0.4),
           axis.text = element_text(size = 12),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
-          legend.key.size = unit(15, "points")
+          legend.key.size = unit(25, "points")
     )
 
 gg
@@ -187,12 +187,12 @@ gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$S
     geom_point() +
     geom_smooth(se = FALSE) +
     ggtitle("Example non-linear gene") +
-    theme_minimal() +
-    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 20, hjust = 0.4),
           axis.text = element_text(size = 12),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
-          legend.key.size = unit(15, "points")
+          legend.key.size = unit(25, "points")
     )
 
 gg
