@@ -34,7 +34,6 @@ library("BiocParallel")
 
 # Evaluation
 library("clues")
-#library("ROCR")
 
 # Data manipulation
 library("magrittr")
