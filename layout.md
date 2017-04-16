@@ -39,7 +39,7 @@ An_alternative_situation_that_is__.md
 figures/complex/complex.png
 Example_using_Splatter_simulations_to__.md
 To_demonstrate_how_the_simulations__.md
-figures/clustering_results/clustering_results.png
+figures/clustering_results/sc3_results.png
 Figure_ref_fig_sc3_example__.md
 While_it_is_beyond_the__.md
 conclusion.md
