@@ -25,11 +25,11 @@ Comparison_of_simulations_Other_simulations__.md
 To_compare_the_simulation_models__.md
 begin_table_caption_label_tab__.tex
 No_quality_control_of_cells__.md
-figures/overall_tung/overall_tung_top.png
+figures/overall_tung/tung_comparison.png
 We_compare_the_means_variances__.md
-figures/overall_tung_bottom/overall_tung_bottom (1).png
+figures/overall_tung_bottom/tung_zeros.png
 While_this_view_allows_us__.md
-figures/datasets_heatmap/datasets_heatmap (2).png
+figures/datasets_heatmap/datasets_heatmap.png
 Looking_across_the_datasets_we__.md
 Complex_simulations__.md
 Simulating_groups_Differential_expression__.md
@@ -39,7 +39,7 @@ An_alternative_situation_that_is__.md
 figures/complex/complex.png
 Example_using_Splatter_simulations_to__.md
 To_demonstrate_how_the_simulations__.md
-figures/clustering_results/clustering_results.png
+figures/clustering_results/sc3_results.png
 Figure_ref_fig_sc3_example__.md
 While_it_is_beyond_the__.md
 conclusion.md
@@ -52,7 +52,12 @@ Supplementary_figures__.md
 figures/simple_model/simple_model.png
 figures/lun_model/lun_model.png
 figures/lun2_model/lun2_model.png
+figures/overall_Camp/overall_Camp.png
+figures/overall_Engel/overall_Engel.png
+figures/overall_Klein/overall_Klein.png
+figures/overall_Tung/overall_Tung.png
+figures/overall_Zeisel/overall_Zeisel.png
 figures/mean-zeros/mean-zeros.png
 figures/disp_estimates/disp_estimates.png
-figures/nonlinear_gene/nonlinear_gene.png
+figures/nonlinear_gene/nonlinear_gene (1).png
 begin_table_caption_label_tab__2.tex
