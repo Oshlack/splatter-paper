@@ -30,7 +30,6 @@ library("scater")
 library("splatter")
 
 # Plotting
-<<<<<<< HEAD
 library("cowplot")
 
 # Tidyverse
@@ -38,7 +37,6 @@ library("tidyverse")
 ```
 
 ```{r source, cache = FALSE}
-<<<<<<< HEAD
 source("../R/utils.R")
 ```
 
@@ -52,7 +50,6 @@ Introduction
 
 In this document we are going to demonstrate some of the types of simulations
 possible using the `Splat` simulation in `Splatter`.
-=======
 
 Different situations
 ==================
