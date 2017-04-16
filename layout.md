@@ -54,5 +54,5 @@ figures/lun_model/lun_model.png
 figures/lun2_model/lun2_model.png
 figures/mean-zeros/mean-zeros.png
 figures/disp_estimates/disp_estimates.png
-figures/nonlinear_gene/nonlinear_gene.png
+figures/nonlinear_gene/nonlinear_gene (1).png
 begin_table_caption_label_tab__2.tex
