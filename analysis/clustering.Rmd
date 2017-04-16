@@ -118,10 +118,10 @@ Now that we have the datasets we want to cluster them using SC3. We know we
 have simulated three groups so we use this as the value of $k$ when clustering.
 
 ```{r sc3}
-sc3s <- bplapply(1:length(sims), function(i) {
+sc3s <- lapply(1:length(sims), function(i) {
     message("Running SC3 ", i)
     sim <- sims[[i]]
-    sc3 <- sc3_prepare(sim, ks = 3, n_cores = 1, gene_filter = TRUE,
+    sc3 <- sc3_prepare(sim, ks = 3, n_cores = 10, gene_filter = TRUE,
                        rand_seed = i)
     sc3 <- sc3_estimate_k(sc3)
     sc3 <- sc3_calc_dists(sc3)
@@ -130,7 +130,7 @@ sc3s <- bplapply(1:length(sims), function(i) {
     sc3 <- sc3_calc_consens(sc3)
     sc3 <- sc3_calc_biology(sc3)
     return(sc3)
-}, BPPARAM = bp)
+})
 
 length(sc3s)
 ```

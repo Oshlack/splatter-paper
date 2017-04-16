@@ -99,7 +99,7 @@ bp <- BiocParallel::MulticoreParam(10)
 
 res <- list()
 
-for (idx in seq_along(nrow(datasets))) {
+for (idx in seq_len(nrow(datasets))) {
     dataset <- datasets[idx, ]
     name <- unlist(dataset["Dataset"])
     comp <- simCompDataset(dataset, root, bp = bp)
