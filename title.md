@@ -1,1 +1,0 @@
-Simplifying simulation of single-cell RNA sequencing with Splatter

@@ -1,1 +1,0 @@
-## Comparison of simulations
