@@ -25,7 +25,7 @@ Comparison_of_simulations_Other_simulations__.md
 To_compare_the_simulation_models__.md
 begin_table_caption_label_tab__.tex
 No_quality_control_of_cells__.md
-figures/overall_tung/overall_tung_top.png
+figures/overall_tung/tung_comparison.png
 We_compare_the_means_variances__.md
 figures/overall_tung_bottom/overall_tung_bottom (1).png
 While_this_view_allows_us__.md
