@@ -27,7 +27,7 @@ begin_table_caption_label_tab__.tex
 No_quality_control_of_cells__.md
 figures/overall_tung/tung_comparison.png
 We_compare_the_means_variances__.md
-figures/overall_tung_bottom/overall_tung_bottom (1).png
+figures/overall_tung_bottom/tung_zeros.png
 While_this_view_allows_us__.md
 figures/datasets_heatmap/datasets_heatmap (2).png
 Looking_across_the_datasets_we__.md
