@@ -1,0 +1,82 @@
+---
+title: "SessionInfo"
+author: "Luke Zappia"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+Code version: `r system("git log -1 --format=oneline | cut -d' ' -f1", intern = TRUE)`
+
+```{r knitr, include = FALSE}
+DOCNAME = "sessionInfo"
+knitr::opts_chunk$set(autodep        = TRUE,
+                      cache          = FALSE,
+                      cache.path     = paste0("cache/", DOCNAME, "/"),
+                      cache.comments = TRUE,
+                      echo           = TRUE,
+                      error          = FALSE,
+                      fig.align      = "center",
+                      fig.path       = paste0("figures/", DOCNAME, "/"),
+                      fig.width      = 10,
+                      fig.height     = 8,
+                      dev            = c('svg', 'png'),
+                      message        = FALSE,
+                      warning        = FALSE)
+```
+
+```{r libraries}
+# RNA-seq
+library("scater")
+library("splatter")
+library("SC3")
+
+# Parallel
+library("BiocParallel")
+
+# Plotting
+library("cowplot")
+
+# Tables
+library("knitr")
+
+# Evaluation
+library("clues")
+
+# Data manipulation
+library("magrittr")
+
+# devtools
+library("devtools")
+
+# Tidyverse
+library("tidyverse")
+```
+
+```{r source, cache = FALSE}
+source("../R/load_datasets.R")
+source("../R/simulate_datasets.R")
+source("../R/utils.R")
+```
+
+Introduction
+============
+
+This document does nothing but print out sessionInfo for all the packages we
+have used and saves it to a file for supplementary information.
+
+Session info
+============
+
+```{r session-info, cache = FALSE}
+info <- session_info()
+
+info.out <- c(paste("Session info", paste0(rep("-", 67), collapse = "")),
+             capture.output(info[[1]]),
+             "\n",
+             paste("Session info", paste0(rep("-", 67), collapse = "")),
+             capture.output(info[[2]]))
+
+info
+
+write_lines(info.out, "../output/sessionInfo.txt")
+```

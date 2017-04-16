@@ -13,7 +13,7 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       cache          = TRUE,
                       cache.path     = paste0("cache/", DOCNAME, "/"),
                       cache.comments = TRUE,
-                      echo           = FALSE,
+                      echo           = TRUE,
                       error          = FALSE,
                       fig.align      = "center",
                       fig.path       = paste0("figures/", DOCNAME, "/"),
@@ -24,14 +24,16 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       warning        = FALSE)
 ```
 
-```{r libraries}
+```{r libraries, cache = FALSE}
 # RNA-seq
 library("splatter")
 library("SC3")
 
+# Parallel
+library("BiocParallel")
+
 # Evaluation
 library("clues")
-library("ROCR")
 
 # Data manipulation
 library("magrittr")
@@ -44,8 +46,7 @@ library("tidyverse")
 ```
 
 ```{r source, cache = FALSE}
-source("../R/load.R")
-source("../R/add_stats.R")
+source("../R/load_datasets.R")
 ```
 
 Introduction
@@ -59,101 +60,159 @@ evaluate the results.
 Data
 ====
 
-The simulation will take parameters from the same Tung dataset used when
-comparing simulations.
+The simulations will use parameters estimated from 200 cells from the Tung
+dataset.
 
 ```{r real}
-real <- loadTung(count = "molecules", version = "filter",
-                 individual = "NA19239", remove.ercc = TRUE)
+root <- "../data"
+
+datasets <- read_tsv(file.path(root, "datasets.txt"),
+                     col_types = cols(.default = col_character(),
+                                      NumCells = col_integer()
+                                      )
+                     )
+
+real <- loadDataset(datasets[3, ], root)
+
+set.seed(1)
+real <- real[rowSums(real) > 0, ]
+real <- real[, sample(1:ncol(real), 200)]
 ```
 
 ```{r estimate}
 params <- splatEstimate(real)
 ```
 
+Here are the estimated parameters:
+
+```{r print-params}
+params
+```
+
+We can now generate 20 synthetic datasets based on these parameters using the
+`Splat` simulation. Each simulation has three groups of cells with 200, 100 or
+50 cells in each group.
+
 ```{r simulate}
-sims <- lapply(1:20, function(seed) {
+bp <- BiocParallel::MulticoreParam(10)
+
+sims <- bplapply(1:20, function(seed) {
     message("Simulating ", seed)
     sim <- splatSimulateGroups(params,
-                           groupCells = rep(100, 3),
-                           de.prob = 0.01,
-                           de.facLoc = 0.1,
-                           de.facScale = 0.5,
-                           dropout.present = FALSE,
-                           seed = seed)
+                               groupCells      = c(200, 100, 50),
+                               de.prob         = 0.1,
+                               de.facLoc       = -0.1,
+                               de.facScale     = 0.3,
+                               dropout.present = FALSE,
+                               seed            = seed)
     sim <- calculateQCMetrics(sim)
     return(sim)
-})
+}, BPPARAM = bp)
 ```
 
 SC3
 ===
 
+Now that we have the datasets we want to cluster them using SC3. We know we
+have simulated three groups so we use this as the value of $k$ when clustering.
+
 ```{r sc3}
 sc3s <- lapply(1:length(sims), function(i) {
     message("Running SC3 ", i)
     sim <- sims[[i]]
-    sc3 <- sc3_prepare(sim)
+    sc3 <- sc3_prepare(sim, ks = 3, n_cores = 10, gene_filter = TRUE,
+                       rand_seed = i)
     sc3 <- sc3_estimate_k(sc3)
-    sc3 <- sc3_set_ks(sc3, ks = 3)
     sc3 <- sc3_calc_dists(sc3)
     sc3 <- sc3_calc_transfs(sc3)
-    sc3 <- sc3_kmeans(sc3)
+    sc3 <- sc3_kmeans(sc3, ks = 3)
     sc3 <- sc3_calc_consens(sc3)
     sc3 <- sc3_calc_biology(sc3)
-    sc3 <- sc3_summarise_results(sc3, k = 3)
     return(sc3)
 })
+
+length(sc3s)
 ```
+
+Evaluation
+==========
+
+The next step is to evaluate the results from the SC3 analysis. We know what
+group each cell was simulated from so we can use those as the truth for
+assessing the clustering. For gene identification we use genes with a DE factor
+not equal to one in any group as true DE genes, and genes with a DE factor
+different from one in a single group as true marker genes.
 
 ```{r evaluate}
 metrics <- sapply(1:length(sc3s), function(run) {
     
     sc3 <- sc3s[[run]]
     
+    # Calculate clustering metrics using the clues package
     truth <- as.numeric(factor(pData(sc3)$Group))
-    predicted <- pData(sc3)$sc3_clusters
+    predicted <- pData(sc3)$sc3_3_clusters
     clust.metrics <- adjustedRand(truth, predicted)
     
+    # Calculate the gene identification metrics
     gene.metrics <- fData(sc3) %>%
+        # SC3 automatically filters genes based on zeros so we don't want to
+        # look at those
+        filter(sc3_gene_filter == TRUE) %>%
+        filter(!is.na(sc3_3_markers_padj)) %>%
+        # Identify true DE genes
         mutate(DE_True = (DEFacGroup1 != 1) | (DEFacGroup2 != 1) |
                    (DEFacGroup3 != 1)) %>%
-        mutate(DE_Predicted = Gene %in% rownames(sc3@sc3$results$de_genes)) %>%
+        # Identify true marker genes
+        mutate(Mk_True = ((DEFacGroup1 != 1) + (DEFacGroup2 != 1) +
+                   (DEFacGroup3 != 1)) == 1) %>%
+        # Identify predicted genes
+        mutate(DE_Predicted = sc3_3_de_padj < 0.05) %>%
+        mutate(Mk_Predicted = sc3_3_markers_padj < 0.05) %>%
+        # Assign genes to DE categories
         mutate(DE_TP = DE_True & DE_Predicted) %>%
         mutate(DE_TN = !DE_True & !DE_Predicted) %>%
         mutate(DE_FP = !DE_True & DE_Predicted) %>%
         mutate(DE_FN = DE_True & !DE_Predicted) %>%
-        mutate(Mk_True = ((DEFacGroup1 != 1) + (DEFacGroup2 != 1) +
-                   (DEFacGroup3 != 1)) == 1) %>%
-        mutate(Mk_Predicted = Gene %in% rownames(sc3@sc3$results$markers)) %>%
+        # Assign genes to marker categories
         mutate(Mk_TP = Mk_True & Mk_Predicted) %>%
         mutate(Mk_TN = !Mk_True & !Mk_Predicted) %>%
         mutate(Mk_FP = !Mk_True & Mk_Predicted) %>%
         mutate(Mk_FN = Mk_True & Mk_Predicted) %>%
+        # Keep only the DE and marker columns (drop all other values)
         select(starts_with("DE_"), starts_with("Mk_")) %>%
         summarise_each(funs(sum)) %>%
+        # Calculate DE summary statistics
         mutate(DE_Accuracy = (DE_TP + DE_TN) / nrow(sc3)) %>%
         mutate(DE_Recall = DE_TP / DE_True) %>%
         mutate(DE_Precision = DE_TP / (DE_TP + DE_FP)) %>%
         mutate(DE_F1 = 2 * ((DE_Precision * DE_Recall) /
                                 (DE_Precision + DE_Recall))) %>%
+        # Calculate marker summary statistics
         mutate(Mk_Accuracy = (Mk_TP + Mk_TN) / nrow(sc3)) %>%
         mutate(Mk_Recall = Mk_TP / Mk_True) %>%
         mutate(Mk_Precision = Mk_TP / (Mk_TP + Mk_FP)) %>%
         mutate(Mk_F1 = 2 * ((Mk_Precision * Mk_Recall) /
                                 (Mk_Precision + Mk_Recall))) %>%
-        select(starts_with("DE_"), starts_with("Mk_")) %>%
+        # Convert to vector
         unlist() 
     
     return(c(Run = run, clust.metrics, gene.metrics))
 })
 
 metrics <- data.frame(t(metrics))
+
+write_tsv(metrics, "../output/sc3_metrics.tsv")
+
+head(metrics)
 ```
 
-```{r output-metrics}
-write_tsv(metrics, "../output/metrics.tsv")
-```
+Clustering
+----------
+
+Let's start by having a look at the clustering results. Here we using a series
+of commonly used clustering indices available in the `clues` package. They aim
+to tell us how many of the cells that are simulated in the same group were
+predicted to be in the same group by SC3.
 
 ```{r cluster-plot}
 p1 <- metrics %>%
@@ -163,11 +222,28 @@ p1 <- metrics %>%
     ggplot(aes(x = Metric, y = Value)) +
     geom_boxplot(colour = "#66C2A5", fill = "#66C2A5", size = 2,
                  outlier.size = 3, alpha = 0.4) +
-    ggtitle("Clustering metrics") +
-    theme_minimal(base_size = 16) +
-    theme(axis.title.x = element_blank())
+    ylim(c(0, 1)) +
+    ggtitle("Clustering indices") +
+    xlab("Index") +
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 18, hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points")
+    )
 p1
 ```
+
+The clustering looks very good, scoring above 75% on each of the indices and
+sometimes producing perfect clusterings.
+
+DE genes
+--------
+
+Let's have a look at the DE genes next. We are going to treat gene
+identification as a binary classification problem (DE or not DE) and look at
+a series of metrics commonly used in that field.
 
 ```{r de-plot}
 metrics %>%
@@ -180,8 +256,22 @@ metrics %>%
     geom_boxplot(colour = "#FC8D62", fill = "#FC8D62", size = 2,
                  outlier.size = 3, alpha = 0.4) +
     ggtitle("Differential expression metrics") +
-    theme_minimal(base_size = 16)
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 20, hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points")
+    )
 ```
+
+Looks like there is high precision, but low recall, so the genes that are
+identified are correct but many of them have been missed. 
+
+Markers
+-------
+
+What about the marker genes? We treat this in the same way as the DE genes.
 
 ```{r marker-plot}
 metrics %>%
@@ -191,11 +281,24 @@ metrics %>%
     mutate(Metric = factor(Metric, c("Accuracy", "Recall", "Precision",
                                      "F1"))) %>%
     ggplot(aes(x = Metric, y = Value)) +
-    geom_boxplot(colour = "#8DA0CB", fill = "#8DA0CB", size = 2,
-                 outlier.size = 3, alpha = 0.4) +
+    geom_boxplot(colour = "#8DA0CB", fill = "#8DA0CB", size = 1,
+                 outlier.size = 2, alpha = 0.4) +
     ggtitle("Marker gene metrics") +
-    theme_minimal(base_size = 16)
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 20, hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points")
+    )
 ```
+
+We get similar results here, high precision but low recall.
+
+All genes
+---------
+
+Let's have a look at the results for the two kinds of genes side-by-side.
 
 ```{r genes-plot}
 p2 <- metrics %>%
@@ -213,23 +316,32 @@ p2 <- metrics %>%
                                                    "Precision", "F1"))) %>%
                   mutate(Type = "Marker")) %>%
     ggplot(aes(x = Metric, y = Value, colour = Type, fill = Type)) +
-    geom_boxplot(size = 1.5, outlier.size = 2, alpha = 0.4) +
+    geom_boxplot(size = 1, outlier.size = 2, alpha = 0.4) +
     scale_colour_manual(values = c("#FC8D62", "#8DA0CB")) +
     scale_fill_manual(values = c("#FC8D62", "#8DA0CB")) +
-    ggtitle("Gene metrics") +
-    theme_minimal(base_size = 16) +
-    theme(axis.title.x = element_blank())
+    ggtitle("Gene identification") +
+    theme_cowplot() +
+    theme(plot.title = element_text(size = 18, hjust = 0.4),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points")
+    )
 p2
 ```
+
+Looks the precision is higher for DE genes but the other metrics are similar.
+
+Combined
+--------
+
+For the paper we want a single panel combining the clustering the gene results.
 
 ```{r combine}
 panel <- plot_grid(p1, p2, align = "h", ncol = 2, labels = "AUTO",
                    rel_widths = c(0.8, 1))
 panel
-```
-
-```{r output-panel}
-save_plot("../output/clustering_results.pdf", panel, ncol = 2)
+save_plot("../output/sc3_results.pdf", panel, ncol = 2)
 ```
 
 Session info
@@ -238,14 +350,3 @@ Session info
 ```{r session-info, cache = FALSE}
 devtools::session_info()
 ```
-
-```{r cleanup-docs, cache = FALSE}
-doc.files <- c(list.files(pattern = "pdf"),
-               list.files(pattern = "html"),
-               list.files(pattern = "docx"))
-
-for (file in doc.files) {
-    file.rename(file, file.path("docs", file))
-}
-```
-

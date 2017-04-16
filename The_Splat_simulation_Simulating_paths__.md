@@ -1,1 +1,0 @@
-# The Splat simulation

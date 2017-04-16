@@ -1,0 +1,1 @@
+Diagram of the Lun 2 simulation model. Input parameters are indicated with double borders, green shading shows those that can be estimated and sampled from real data. Red shading indicates the final output.

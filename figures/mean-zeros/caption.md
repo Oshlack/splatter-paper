@@ -1,0 +1,1 @@
+Fitting the mean-zeros relationship. Points show genes in the Tung dataset and the red line is a logistic function fitted to the data using Splat's estimation procedure.

@@ -1,0 +1,1 @@
+To compare the simulation models available in Splatter we estimated parameters from a range of datasets then produced synthetic datasets using those parameters. Five public datasets were selected with varying species, capture platform and cell type (Table \ref{tab:datasets}). Three of the datasets used Unique Molecular Identifiers (UMIs) and two were full-length protocols.

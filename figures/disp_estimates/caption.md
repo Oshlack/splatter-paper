@@ -1,0 +1,1 @@
+Correction of edgeR dispersion estimates. Scatter plot of simulated dispersion against the estimated values. Estimates of common dispersion obtained from edgeR (green) can be inflated for single-cell data. The Splat simulation uses a linearly corrected value (orange) in it's estimation procedure. The red line shows the true values.

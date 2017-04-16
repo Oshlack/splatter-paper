@@ -1,11 +1,11 @@
 **Motivation**
-_This section should specifically state the scientific question within the context of the field of study._
+As single-cell RNA-seq (scRNA-seq) technology has rapidly developed so have methods for analysing it. Many of these methods have been tested and developed using simulated datasets. While this is a valid and useful approach there are several ways in which it can be improved. Many of the current simulations are not well documented, code may not be available and their similarity to real data is not demonstrated.
 
 **Results**
-_This section should summarize the scientific advance or novel results of the study, and its impact on computational biology._
+We present the Splatter package for simple simulation of single-cell RNA-seq data. Splatter is a Bioconductor R package that aims to provide a consistent interface for multiple scRNA-seq simulation methods that are well-documented and easy to use. We also provide our own simulation, Splat, based on a gamma-poisson distribution incorporating high-expression outlier genes, defined library sizes, a mean-variance trend and random dropout, allowing users to simulate single populations of cells, populations with multiple cell types or differentiation paths. Splatter also makes it easy to compare real and simulated datasets and we provide a short example of how the Splat simulation can be used to evaluate an analysis method.
 
 **Availability and Implementation**
-_This section should state software availability if the paper focuses mainly on software development or on the implementation of an algorithm. Examples are: 'Freely available on the web at http://www.exampleurl.org.' Website implemented in Perl, MySQL and Apache, with all major browsers supported'; or 'Source code and binaries freely available for download at URL, implemented in C++ and supported on linux and MS Windows'. The complete address (URL) should be given. If the manuscript describes new software tools or the implementation of novel algorithms the software must be freely available to non-commercial users. Authors must also ensure that the software is available for a full TWO YEARS following publication. The editors of Bioinformatics encourage authors to make their source code available and, if possible, to provide access through an open source license (see www.opensource.org for examples._
+The Splatter R package, along with installation instructions and a vignette describing it's use, is available through Bioconductor at [https://www.bioconductor.org/packages/splatter/](https://www.bioconductor.org/packages/splatter/). The code is being developed on Github at [https://github.com/Oshlack/splatter](https://github.com/Oshlack/splatter).
 
 **Contact**
 _Full email address to be given, preferably an institution email address._

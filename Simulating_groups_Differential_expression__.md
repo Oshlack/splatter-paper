@@ -1,1 +1,1 @@
-## Simulating groups
+### Simulating groups

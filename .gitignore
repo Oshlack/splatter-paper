@@ -9,5 +9,8 @@ analysis/figures
 analysis/docs
 analysis/*.html
 
+# Data directory
+data
+
 # Output files
 output

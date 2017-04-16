@@ -1,1 +1,0 @@
-# Example evaluation of clustering method

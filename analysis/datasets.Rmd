@@ -1,0 +1,356 @@
+---
+title: "Datasets"
+author: "Luke Zappia"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+Code version: `r system("git log -1 --format=oneline | cut -d' ' -f1", intern = TRUE)`
+
+```{r knitr, include = FALSE}
+DOCNAME = "datasets"
+knitr::opts_chunk$set(autodep        = TRUE,
+                      cache          = TRUE,
+                      cache.path     = paste0("cache/", DOCNAME, "/"),
+                      cache.comments = TRUE,
+                      echo           = TRUE,
+                      error          = FALSE,
+                      fig.align      = "center",
+                      fig.path       = paste0("figures/", DOCNAME, "/"),
+                      fig.width      = 10,
+                      fig.height     = 8,
+                      dev            = c('svg', 'png'),
+                      message        = FALSE,
+                      warning        = FALSE)
+```
+
+```{r libraries, cache = FALSE}
+# RNA-seq
+library("scater")
+library("splatter")
+
+# Parallel
+library("BiocParallel")
+
+# Plotting
+library("cowplot")
+
+# Tables
+library("knitr")
+
+# Tidyverse
+library("tidyverse")
+```
+
+```{r source, cache = FALSE}
+source("../R/load_datasets.R")
+source("../R/simulate_datasets.R")
+source("../R/utils.R")
+```
+
+```{r ggtheme, cache = FALSE}
+```
+
+Introduction
+============
+
+In this document we are going to load multiple real datasets, estimate
+parameters for the various simulations, simulate new datasets and compare them
+to the real data.
+
+Data
+====
+
+We have a variety of real datasets we could use. Let's load the metadata file
+and take a look.
+
+```{r datasets}
+root <- "../data"
+datasets <- read_tsv(file.path(root, "datasets.txt"),
+                     col_types = cols(.default = col_character(),
+                                      NumCells = col_integer()
+                                      )
+                     )
+datasets
+```
+
+These five datasets cover a variety of different species, cell types, platforms,
+processing etc.
+
+For the paper we need a table, which I am going to save in LaTeX format.
+
+```{r datasets-table}
+datasets %>%
+    select(Dataset, Species, CellType, Platform, Protocol, UMI, NumCells) %>%
+    arrange(Dataset) %>%
+    kable(format = "latex", caption = "Details of real datasets") %>%
+    write_lines("../output/datasets_table.tex")
+```
+
+Simulation
+==========
+
+The next step is to load in the datasets, estimate parameters from them,
+simulate using the various models in Splatter and compare the results. Here we
+do that for each dataset. We also produce an overall comparison panel.
+
+```{r simulate, cache.lazy = FALSE}
+bp <- BiocParallel::MulticoreParam(10)
+
+res <- list()
+
+for (idx in seq_len(nrow(datasets))) {
+    dataset <- datasets[idx, ]
+    name <- unlist(dataset["Dataset"])
+    comp <- simCompDataset(dataset, root, bp = bp)
+    res[[name]] <- comp
+    message("Writing comparison...")
+    write_rds(comp, path = paste0("../output/res_", name, ".Rds"),
+              compress = "gz")
+    message("Making overall panel...")
+    plt <- makeOverallPanel(comp$Comp, comp$Diff, title = name)
+    save_plot(paste0("../output/overall_", name, ".png"), plt,
+              ncol = 4, nrow = 7)
+    message("All done!")
+}
+```
+
+Tung comparison
+===============
+
+The overall comparison panels are good for getting an idea of how simulations
+perform but the format is not really appropriate for a paper. We are going to
+extract the plots for the Tung dataset, pretty them up a bit and put them into
+paper appropriate panels.
+
+```{r tung-panel}
+plots <- list(MeansComp   = res$Tung$Comp$Plots$Means,
+              MeansDiff   = res$Tung$Diff$Plots$Means,
+              VarsComp    = res$Tung$Comp$Plots$Variances,
+              VarsDiff    = res$Tung$Diff$Plots$Variances,
+              MeanVarComp = res$Tung$Comp$Plots$MeanVar,
+              MeanVarDiff = res$Tung$Diff$Plots$MeanVar,
+              LibSizeComp = res$Tung$Comp$Plots$LibrarySizes,
+              LibSizeDiff = res$Tung$Diff$Plots$LibrarySizes)
+
+# Select the colour we are going to use
+cols <- RColorBrewer::brewer.pal(8, "Dark2")
+
+# Make adjustments to the plots
+for (idx in seq_along(plots)) {
+    name <- names(plots)[idx]
+    plot <- plots[[idx]]
+    
+    # Set a new theme
+    plot <- plot +
+        theme_cowplot(font_size = 12) +
+        theme(legend.position = "none")
+    
+    # Set the colours, diff plots have one less dataset
+    if (grepl("Comp", name)) {
+        plot <- plot + scale_color_manual(values = cols) + 
+            scale_fill_manual(values = cols)
+    } else {
+        plot <- plot + scale_color_manual(values = cols[-1]) + 
+            scale_fill_manual(values = cols[-1])
+    }
+    
+    # Boxplots are replotted with different properties, axis text adjusted and
+    # x label removed
+    if (!grepl("MeanVar", name)) {
+        plot <- plot + geom_boxplot(aes(fill = Dataset),
+                                    size = 1.5, alpha = 0.2) + 
+            theme(axis.title.x = element_blank(),
+                  axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+    }
+    
+    plots[[idx]] <- plot
+}
+
+# Get a single legend to use
+leg <- get_legend(plots[["MeanVarComp"]] + theme(legend.position = "bottom"))
+
+# Assemble the panel
+panel <- ggdraw() +
+    draw_label("A", 0.01, 0.986,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeansComp,  0.00, 0.77, 0.49, 0.23) +
+    draw_label("B", 0.51, 0.986,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeansDiff,  0.51, 0.77, 0.49, 0.23) +
+    draw_label("C", 0.01, 0.746,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$VarsComp,  0.00, 0.53, 0.49, 0.23) +
+    draw_label("D", 0.51, 0.746,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$VarsDiff,  0.51, 0.53, 0.49, 0.23) +
+    draw_label("E", 0.01, 0.506,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeanVarComp,  0.00, 0.29, 0.49, 0.23) +
+    draw_label("F", 0.51, 0.506,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeanVarDiff,  0.51, 0.29, 0.49, 0.23) +
+    draw_label("G", 0.01, 0.266,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$LibSizeComp,  0.00, 0.05, 0.49, 0.23) +
+    draw_label("H", 0.51, 0.266,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$LibSizeDiff, 0.51, 0.05, 0.49, 0.23) +
+    draw_plot(leg, 0.00, 0.00, 1.00, 0.04)
+
+save_plot("../output/tung_comparison.png", panel, ncol = 2, nrow = 4)
+panel
+```
+
+```{r tung-panel-zeros}
+plots <- list(ZerosCellComp = res$Tung$Comp$Plots$ZerosCell,
+              ZerosCellDiff = res$Tung$Diff$Plots$ZerosCell,
+              ZerosGeneComp = res$Tung$Comp$Plots$ZerosGene,
+              ZerosGeneDiff = res$Tung$Diff$Plots$ZerosGene,
+              MeanZerosComp = res$Tung$Comp$Plots$MeanZeros,
+              MeanZerosDiff = res$Tung$Diff$Plots$MeanZeros)
+
+# Make adjustments to the plots
+for (idx in seq_along(plots)) {
+    name <- names(plots)[idx]
+    plot <- plots[[idx]]
+    
+    # Set a new theme
+    plot <- plot +
+        theme_cowplot(font_size = 12) +
+        theme(legend.position = "none")
+    
+    # Set the colours, diff plots have one less dataset
+    if (grepl("Comp", name)) {
+        plot <- plot + scale_color_manual(values = cols) + 
+            scale_fill_manual(values = cols)
+    } else {
+        plot <- plot + scale_color_manual(values = cols[-1]) + 
+            scale_fill_manual(values = cols[-1])
+    }
+    
+    # Boxplots are replotted with different properties, axis text adjusted and
+    # x label removed
+    if (!grepl("MeanZeros", name)) {
+        plot <- plot + geom_boxplot(aes(fill = Dataset),
+                                    size = 1.5, alpha = 0.2) + 
+            theme(axis.title.x = element_blank(),
+                  axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+    }
+    
+    plots[[idx]] <- plot
+}
+
+# Get a single legend to use
+leg <- get_legend(plots[["MeanZerosComp"]] + theme(legend.position = "bottom"))
+
+# Assemble the panel
+panel <- ggdraw() +
+    draw_label("A", 0.01, 0.982,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$ZerosCellComp,  0.00, 0.69, 0.49, 0.31) +
+    draw_label("B", 0.51, 0.982,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$ZerosCellDiff,  0.51, 0.69, 0.49, 0.31) +
+    draw_label("C", 0.01, 0.662,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$ZerosGeneComp,  0.00, 0.37, 0.49, 0.31) +
+    draw_label("D", 0.51, 0.662,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$ZerosGeneDiff,  0.51, 0.37, 0.49, 0.31) +
+    draw_label("E", 0.01, 0.342,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeanZerosComp,  0.00, 0.05, 0.49, 0.31) +
+    draw_label("F", 0.51, 0.342,
+               fontface = "bold", hjust = 0, vjust = 0) +
+    draw_plot(plots$MeanZerosDiff,  0.51, 0.05, 0.49, 0.31) +
+    draw_plot(leg, 0.00, 0.00, 1.00, 0.04)
+
+save_plot("../output/tung_zeros.png", panel, ncol = 2, nrow = 3)
+panel
+```
+
+Overall summary
+===============
+
+We have produced plots to show how simulations compare to individual datasets
+but what about an overall summary across all of them? To make this easier we
+are going to calculate a single statistic for each of the different properties
+we are interested in using the `summariseDiff` function. For each property the
+values for both the real data and the simulations are sorted, the difference
+between them calculated and the Median Absolute Deviation is taken as the
+statistic.
+
+```{r summarise}
+summary <- list()
+
+for (name in names(res)) {
+    diff <- res[[name]]$Diff
+    summ <- summariseDiff(diff)$Long
+    colnames(summ)[1] <- "Simulation"
+    summ <- data.frame(Dataset = name, summ)
+    summary[[name]] <- summ
+}
+
+summary <- bind_rows(summary)
+```
+
+In the paper we are going to present these results as a heatmap of the ranks.
+
+```{r summary-heatmap}
+summary %>%
+    mutate(Statistic = factor(Statistic,
+                              levels = rev(c("Mean", "Variance", "MeanVar",
+                                         "LibSize", "ZerosCell", "ZerosGene",
+                                         "MeanZeros")))) %>%
+    mutate(Rank = factor(Rank)) %>%
+    ggplot(aes(x = Simulation, y = Statistic, fill = Rank, label = MAD)) +
+    geom_tile() +
+    viridis::scale_fill_viridis(direction = -1, discrete = TRUE) +
+    scale_x_discrete(labels = c("Splat" = "Splat",
+                                "SplatDrop" = "Splat (Dropout)",
+                                "Simple" = "Simple", "Lun" = "Lun",
+                                "Lun2" = "Lun2",
+                                "Lun2ZINB" = "Lun2 (ZINB)")) +
+    scale_y_discrete(labels = c("Mean" = "Mean", "Variance" = "Variance",
+                                "MeanVar" = "Mean-Variance",
+                                "LibSize" = "Library Size",
+                                "ZerosCell" = "% Zeros (Cell)",
+                                "ZerosGene" = "% Zeros (Gene)",
+                                "MeanZeros" = "Mean-Zeros")) +
+    ggtitle("Rank of MAD from real data") +
+    guides(fill = guide_legend(ncol = 1)) +
+    facet_grid(Dataset ~ .) +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.title = element_blank(),
+          axis.text = element_text(size = 12),
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          panel.grid = element_blank(),
+          strip.text = element_text(size = 16, face = "bold"),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points"),
+          legend.position = "right")
+
+ggsave("../output/datasets_heatmap.pdf", width = 20, height = 25, units = "cm")
+```
+
+We also produce a supplementary table of the MADs.
+
+```{r}
+summary %>%
+    select(-Rank) %>%
+    mutate(MAD = chrRound(MAD, 2)) %>%
+    spread(key = Statistic, value = MAD) %>%
+    kable(format = "latex",
+          caption = "Median Absolute Deviations for all datasets") %>%
+    write_lines("../output/mads_table.tex")
+```
+
+Session info
+============
+
+```{r session-info, cache = FALSE}
+devtools::session_info()
+```

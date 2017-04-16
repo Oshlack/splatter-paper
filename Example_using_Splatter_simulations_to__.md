@@ -1,0 +1,1 @@
+## Example: using Splatter simulations to evaluate a clustering method
