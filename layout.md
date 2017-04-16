@@ -55,6 +55,7 @@ figures/lun2_model/lun2_model.png
 figures/overall_Camp/overall_Camp.png
 figures/overall_Engel/overall_Engel.png
 figures/overall_Klein/overall_Klein.png
+figures/overall_Tung/overall_Tung.png
 figures/mean-zeros/mean-zeros.png
 figures/disp_estimates/disp_estimates.png
 figures/nonlinear_gene/nonlinear_gene (1).png
