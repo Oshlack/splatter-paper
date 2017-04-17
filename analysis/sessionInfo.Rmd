@@ -1,19 +1,20 @@
 ---
 title: "SessionInfo"
-author: "Luke Zappia"
 date: '`r Sys.Date()`'
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 Code version: `r system("git log -1 --format=oneline | cut -d' ' -f1", intern = TRUE)`
 
-```{r knitr, include = FALSE}
+```{r knitr-opts, include = FALSE}
 DOCNAME = "sessionInfo"
 knitr::opts_chunk$set(autodep        = TRUE,
                       cache          = FALSE,
                       cache.path     = paste0("cache/", DOCNAME, "/"),
                       cache.comments = TRUE,
-                      echo           = TRUE,
+                      echo           = FALSE,
                       error          = FALSE,
                       fig.align      = "center",
                       fig.path       = paste0("figures/", DOCNAME, "/"),
@@ -24,7 +25,7 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       warning        = FALSE)
 ```
 
-```{r libraries}
+```{r load-libraries, cache FALSE, echo = FALSE}
 # RNA-seq
 library("scater")
 library("splatter")
@@ -39,6 +40,9 @@ library("cowplot")
 # Tables
 library("knitr")
 
+# Documents
+library("rmarkdown")
+
 # Evaluation
 library("clues")
 
@@ -52,22 +56,18 @@ library("devtools")
 library("tidyverse")
 ```
 
-```{r source, cache = FALSE}
+```{r load-source, cache = FALSE, echo = FALSE}
 source("../R/load_datasets.R")
 source("../R/simulate_datasets.R")
 source("../R/utils.R")
 ```
 
-Introduction
-============
+Session information
+===================
 
-This document does nothing but print out sessionInfo for all the packages we
-have used and saves it to a file for supplementary information.
+Details of the R environment and packages used for analysis.
 
-Session info
-============
-
-```{r session-info, cache = FALSE}
+```{r print-session-info, cache = FALSE, echo = FALSE}
 info <- session_info()
 
 info.out <- c(paste("Session info", paste0(rep("-", 67), collapse = "")),
@@ -76,7 +76,7 @@ info.out <- c(paste("Session info", paste0(rep("-", 67), collapse = "")),
              paste("Session info", paste0(rep("-", 67), collapse = "")),
              capture.output(info[[2]]))
 
-info
-
 write_lines(info.out, "../output/sessionInfo.txt")
+
+session_info()
 ```

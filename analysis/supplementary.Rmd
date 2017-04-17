@@ -24,13 +24,16 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       warning        = FALSE)
 ```
 
-```{r libraries}
+```{r libraries, cache = FALSE}
 # RNA-seq
 library("scater")
 library("splatter")
 
 # Plotting
 library("cowplot")
+
+# Documents
+library("rmarkdown")
 
 # Tidyverse
 library("tidyverse")
@@ -112,7 +115,8 @@ gg <- ggplot(df, aes(x = x, y = y)) +
     )
 
 gg
-ggsave("../output/mean-zeros.png", width = 8, height = 5)
+ggsave("../additional/additional12_meanzeros.png", width = 8, height = 5)
+ggsave("../additional/additional12_meanzeros.pdf", width = 8, height = 5)
 ```
 
 Dispersion estimation
@@ -159,7 +163,8 @@ gg <- disps %>%
     )
 
 gg
-ggsave("../output/disp_estimates.png", width = 8, height = 5)
+ggsave("../additional/additional11_disps.png", width = 8, height = 5)
+ggsave("../additional/additional11_disps.pdf", width = 8, height = 5)
 ```
 
 Non-linear genes
@@ -196,7 +201,21 @@ gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$S
     )
 
 gg
-ggsave("../output/nonlinear_gene.png", width = 8, height = 5)
+ggsave("../additional/additional10_nonlinear.png", width = 8, height = 5)
+ggsave("../additional/additional10_nonlinear.pdf", width = 8, height = 5)
+```
+
+Session information
+===================
+
+The `sessionInfo.Rmd` file loads all the packages used for analysis and prints
+it out. We are going to render this document as a PDF to be included as an
+additional file.
+
+```{r sessionInfo-render, cache = FALSE, results = "hide"}
+render("sessionInfo.Rmd", output_format = "pdf_document",
+       output_file = "additional13_sessionInfo.pdf",
+       output_dir = "../additional", envir = new.env())
 ```
 
 Session info

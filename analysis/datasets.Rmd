@@ -109,7 +109,10 @@ for (idx in seq_len(nrow(datasets))) {
               compress = "gz")
     message("Making overall panel...")
     plt <- makeOverallPanel(comp$Comp, comp$Diff, title = name)
-    save_plot(paste0("../output/overall_", name, ".png"), plt,
+    plt.name <- paste0("additional", idx + 3, "_", name, "_overall")
+    save_plot(paste0("../additional/", plt.name, ".png"), plt,
+              ncol = 4, nrow = 7)
+    save_plot(paste0("../additional/", plt.name, ".pdf"), plt,
               ncol = 4, nrow = 7)
     message("All done!")
 }
@@ -336,16 +339,10 @@ summary %>%
 ggsave("../output/datasets_heatmap.pdf", width = 20, height = 25, units = "cm")
 ```
 
-We also produce a supplementary table of the MADs.
+We also produce a supplementary table of the MADs as a CSV.
 
-```{r}
-summary %>%
-    select(-Rank) %>%
-    mutate(MAD = chrRound(MAD, 2)) %>%
-    spread(key = Statistic, value = MAD) %>%
-    kable(format = "latex",
-          caption = "Median Absolute Deviations for all datasets") %>%
-    write_lines("../output/mads_table.tex")
+```{r write-summary}
+write_csv(summary, "../additional/additional9_mads.csv")
 ```
 
 Session info
