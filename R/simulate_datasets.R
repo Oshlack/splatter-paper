@@ -68,9 +68,12 @@ simCompDataset <- function(dataset, root, seed = 1,
                                             zinb = TRUE, verbose = FALSE,
                                             seed = seed)
 
+    cols <- scales::hue_pal()(length(sims))
+
     message("***COMPARING DATASETS***")
-    comp <- splatter::compareSCESets(sims, point.size = 0.2)
-    diff <- splatter::diffSCESets(sims, ref = "Real", point.size = 0.2)
+    comp <- splatter::compareSCESets(sims, point.size = 0.2, colours = cols)
+    diff <- splatter::diffSCESets(sims, ref = "Real", point.size = 0.2,
+                                  colours = cols[-1])
     })[3] # End timed section
 
     message("#### DONE ", tt, "####")
