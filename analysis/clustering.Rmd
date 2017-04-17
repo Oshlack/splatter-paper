@@ -341,7 +341,8 @@ For the paper we want a single panel combining the clustering the gene results.
 panel <- plot_grid(p1, p2, align = "h", ncol = 2, labels = "AUTO",
                    rel_widths = c(0.8, 1))
 panel
-save_plot("../output/sc3_results.pdf", panel, ncol = 2)
+save_plot("../figures/figure6_sc3_results.pdf", panel, ncol = 2)
+save_plot("../figures/figure6_sc3_results.png", panel, ncol = 2)
 ```
 
 Session info

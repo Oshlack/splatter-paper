@@ -201,7 +201,8 @@ panel <- ggdraw() +
     draw_plot(plots$LibSizeDiff, 0.51, 0.05, 0.49, 0.23) +
     draw_plot(leg, 0.00, 0.00, 1.00, 0.04)
 
-save_plot("../output/tung_comparison.png", panel, ncol = 2, nrow = 4)
+save_plot("../figures/figure2_tung_comparison.png", panel, ncol = 2, nrow = 4)
+save_plot("../figures/figure2_tung_comparison.pdf", panel, ncol = 2, nrow = 4)
 panel
 ```
 
@@ -269,7 +270,8 @@ panel <- ggdraw() +
     draw_plot(plots$MeanZerosDiff,  0.51, 0.05, 0.49, 0.31) +
     draw_plot(leg, 0.00, 0.00, 1.00, 0.04)
 
-save_plot("../output/tung_zeros.png", panel, ncol = 2, nrow = 3)
+save_plot("../figures/figure3_tung_zeros.png", panel, ncol = 2, nrow = 3)
+save_plot("../figures/figure3_tung_zeros.pdf", panel, ncol = 2, nrow = 3)
 panel
 ```
 
@@ -336,7 +338,10 @@ summary %>%
           legend.key.size = unit(25, "points"),
           legend.position = "right")
 
-ggsave("../output/datasets_heatmap.pdf", width = 20, height = 25, units = "cm")
+ggsave("../figures/figure4_mads_heatmap.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../figures/figure4_mads_heatmap.png",
+       width = 20, height = 25, units = "cm")
 ```
 
 We also produce a supplementary table of the MADs as a CSV.

@@ -153,7 +153,10 @@ groups and paths.
 panel <- plot_grid(pca.groups, pca.paths, labels = "AUTO")
 panel
 
-save_plot("../output/complex.pdf", panel, ncol = 2, nrow = 1, base_height = 6)
+save_plot("../figures/figure5_complex.pdf", panel,
+          ncol = 2, nrow = 1, base_height = 6)
+save_plot("../figures/figure5_complex.png", panel,
+          ncol = 2, nrow = 1, base_height = 6)
 ```
 
 Session info
