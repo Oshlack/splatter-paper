@@ -25,7 +25,7 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       warning        = FALSE)
 ```
 
-```{r load-libraries, cache FALSE, echo = FALSE}
+```{r load-libraries, echo = FALSE}
 # RNA-seq
 library("scater")
 library("splatter")
@@ -56,7 +56,7 @@ library("devtools")
 library("tidyverse")
 ```
 
-```{r load-source, cache = FALSE, echo = FALSE}
+```{r load-source, echo = FALSE}
 source("../R/load_datasets.R")
 source("../R/simulate_datasets.R")
 source("../R/utils.R")
@@ -67,7 +67,7 @@ Session information
 
 Details of the R environment and packages used for analysis.
 
-```{r print-session-info, cache = FALSE, echo = FALSE}
+```{r print-session-info, echo = FALSE}
 info <- session_info()
 
 info.out <- c(paste("Session info", paste0(rep("-", 67), collapse = "")),

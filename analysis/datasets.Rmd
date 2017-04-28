@@ -112,8 +112,8 @@ for (idx in seq_len(nrow(datasets))) {
     plt.name <- paste0("additional", idx + 3, "_", name, "_overall")
     save_plot(paste0("../additional/", plt.name, ".png"), plt,
               ncol = 4, nrow = 7)
-    save_plot(paste0("../additional/", plt.name, ".pdf"), plt,
-              ncol = 4, nrow = 7)
+    #save_plot(paste0("../additional/", plt.name, ".pdf"), plt,
+    #          ncol = 4, nrow = 7)
     message("All done!")
 }
 ```
@@ -139,6 +139,11 @@ plots <- list(MeansComp   = res$Tung$Comp$Plots$Means,
 # Select the colour we are going to use
 cols <- RColorBrewer::brewer.pal(8, "Dark2")
 
+# Labels for datasets
+labels = c("Real" = "Real", "Splat" = "Splat", "SplatDrop" = "Splat (Drop)",
+           "Simple" = "Simple", "Lun" = "Lun", "Lun2" = "Lun 2",
+           "Lun2ZINB" = "Lun 2 (ZINB)")
+
 # Make adjustments to the plots
 for (idx in seq_along(plots)) {
     name <- names(plots)[idx]
@@ -151,18 +156,23 @@ for (idx in seq_along(plots)) {
     
     # Set the colours, diff plots have one less dataset
     if (grepl("Comp", name)) {
-        plot <- plot + scale_color_manual(values = cols) + 
-            scale_fill_manual(values = cols)
+        plot <- plot + scale_color_manual(values = cols, labels = labels) + 
+            scale_fill_manual(values = cols, labels = labels)
     } else {
-        plot <- plot + scale_color_manual(values = cols[-1]) + 
-            scale_fill_manual(values = cols[-1])
+        plot <- plot + scale_color_manual(values = cols[-1], labels = labels[-1]) + 
+            scale_fill_manual(values = cols[-1], labels = labels[-1])
     }
     
     # Boxplots are replotted with different properties, axis text adjusted and
     # x label removed
     if (!grepl("MeanVar", name)) {
         plot <- plot + geom_boxplot(aes(fill = Dataset),
-                                    size = 1.5, alpha = 0.2) + 
+                                    size = 1.5, alpha = 0.2) +
+            scale_x_discrete(labels = c("Splat" = "Splat",
+                                        "SplatDrop" = "Splat (Drop)",
+                                        "Simple" = "Simple", "Lun" = "Lun",
+                                        "Lun2" = "Lun 2",
+                                        "Lun2ZINB" = "Lun 2 (ZINB)")) +
             theme(axis.title.x = element_blank(),
                   axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
     }
@@ -226,18 +236,23 @@ for (idx in seq_along(plots)) {
     
     # Set the colours, diff plots have one less dataset
     if (grepl("Comp", name)) {
-        plot <- plot + scale_color_manual(values = cols) + 
-            scale_fill_manual(values = cols)
+        plot <- plot + scale_color_manual(values = cols, labels = labels) + 
+            scale_fill_manual(values = cols, labels = labels)
     } else {
-        plot <- plot + scale_color_manual(values = cols[-1]) + 
-            scale_fill_manual(values = cols[-1])
+        plot <- plot + scale_color_manual(values = cols[-1], labels = labels[-1]) + 
+            scale_fill_manual(values = cols[-1], labels = labels[-1])
     }
     
     # Boxplots are replotted with different properties, axis text adjusted and
     # x label removed
     if (!grepl("MeanZeros", name)) {
         plot <- plot + geom_boxplot(aes(fill = Dataset),
-                                    size = 1.5, alpha = 0.2) + 
+                                    size = 1.5, alpha = 0.2) +
+            scale_x_discrete(labels = c("Splat" = "Splat",
+                                        "SplatDrop" = "Splat (Drop)",
+                                        "Simple" = "Simple", "Lun" = "Lun",
+                                        "Lun2" = "Lun 2",
+                                        "Lun2ZINB" = "Lun 2 (ZINB)")) +
             theme(axis.title.x = element_blank(),
                   axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
     }
@@ -313,10 +328,10 @@ summary %>%
     geom_tile() +
     viridis::scale_fill_viridis(direction = -1, discrete = TRUE) +
     scale_x_discrete(labels = c("Splat" = "Splat",
-                                "SplatDrop" = "Splat (Dropout)",
+                                "SplatDrop" = "Splat (Drop)",
                                 "Simple" = "Simple", "Lun" = "Lun",
-                                "Lun2" = "Lun2",
-                                "Lun2ZINB" = "Lun2 (ZINB)")) +
+                                "Lun2" = "Lun 2",
+                                "Lun2ZINB" = "Lun 2 (ZINB)")) +
     scale_y_discrete(labels = c("Mean" = "Mean", "Variance" = "Variance",
                                 "MeanVar" = "Mean-Variance",
                                 "LibSize" = "Library Size",

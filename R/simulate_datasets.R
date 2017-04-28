@@ -42,6 +42,18 @@ simCompDataset <- function(dataset, root, seed = 1,
     params <- splatter::lunEstimate(counts)
     sims$Lun <- splatter::lunSimulate(params, verbose = FALSE, seed = seed)
 
+    message("***ADDING LUN2***")
+    params <- splatter::lun2Estimate(counts,
+                                     plate = sample(1:2, ncol(counts),
+                                                    replace = TRUE),
+                                     min.size = 20, BPPARAM = bp,
+                                     verbose = FALSE)
+    sims$Lun2 <- splatter::lun2Simulate(params, nGenes = nrow(counts),
+                                        verbose = FALSE, seed = seed)
+    sims$Lun2ZINB <- splatter::lun2Simulate(params, nGenes = nrow(counts),
+                                            zinb = TRUE, verbose = FALSE,
+                                            seed = seed)
+
     message("***ADDING SCDD***")
     params <- splatter::scDDEstimate(counts,
                                      conditions = sample(1:2, ncol(counts),
@@ -56,23 +68,11 @@ simCompDataset <- function(dataset, root, seed = 1,
                                        BPPARAM = bp)
     sims$scDD <- sim.scDD
 
-    message("***ADDING LUN2***")
-    params <- splatter::lun2Estimate(counts,
-                                     plate = sample(1:2, ncol(counts),
-                                                    replace = TRUE),
-                                     min.size = 20, BPPARAM = bp,
-                                     verbose = FALSE)
-    sims$Lun2 <- splatter::lun2Simulate(params, nGenes = nrow(counts),
-                                        verbose = FALSE, seed = seed)
-    sims$Lun2ZINB <- splatter::lun2Simulate(params, nGenes = nrow(counts),
-                                            zinb = TRUE, verbose = FALSE,
-                                            seed = seed)
-
     cols <- scales::hue_pal()(length(sims))
 
     message("***COMPARING DATASETS***")
-    comp <- splatter::compareSCESets(sims, point.size = 0.2, colours = cols)
-    diff <- splatter::diffSCESets(sims, ref = "Real", point.size = 0.2,
+    comp <- splatter::compareSCESets(sims, point.size = 0.3, colours = cols)
+    diff <- splatter::diffSCESets(sims, ref = "Real", point.size = 0.3,
                                   colours = cols[-1])
     })[3] # End timed section
 
