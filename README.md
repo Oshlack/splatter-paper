@@ -12,6 +12,7 @@ Directory structrure
 * `data` - Input data files
 * `figures` - Figures used in the main paper
 * `output` - Additional intermediate files
+* `R` - R functions used in analysis
 
 Data
 ----
@@ -22,6 +23,15 @@ file should be extracted to `data` before attempting to run any of the analysis.
 ```{bash}
 tar -xzvf data.tar.gz
 ```
+
+After extraction the `data` directory will contain the following files:
+
+* `datasets.txt` - Metadata about the various datasets
+* `Camp.txt` - The Camp dataset
+* `Engel.tsv` - The Engel dataset
+* `Klein.csv` - The Klein dataset
+* `Tung.txt` - The Tung dataset
+* `Zeisel.txt` - The Zeisel dataset
 
 Analysis
 --------
@@ -39,7 +49,27 @@ These are `additional_figures.Rmd` which combines the additional figures into a
 single PDF and `sessionInfo.Rmd` which outputs the details of all the packages
 used during the analysis.
 
+Running the analysis files will produce figure files in the `figures` and
+`additional` directories as well as data files in the `output` directory.
+
 Please be aware that some of the analysis (particularly `datasets.Rmd`) requires
 large amounts of resources (processing, memory, time) and may require slight
 modifications to run in your environment.
+
+R
+---
+
+This directory contains the following functions used in the analysis:
+
+* `load_datasets.R`
+  * `loadDataset` - Takes a row from `datasets.txt` and the path to the data
+    files then returns an expression matrix for that dataset
+* `simulate_datasets.R`
+  * `simCompDataset` - Loads a dataset, estimates parameters for the various
+    simulations, simulates new datasets and returns a comparison
+* `utils.R`
+  * `chrRound` - Rounds a number for presentation, converting it to a string
+  * `logistic` - Implementation of the logistic function
+  * `mcri.palettes` - List of colour palettes used for some plots
+  * `mcriPalette` - Returns colour palette of particular size
 
