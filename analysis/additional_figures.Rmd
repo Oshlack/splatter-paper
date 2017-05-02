@@ -1,0 +1,78 @@
+---
+title: "Additional figures"
+date: '`r Sys.Date()`'
+output:
+  pdf_document: 
+    fig_caption: yes
+---
+
+<!--Code version: `r system("git log -1 --format=oneline | cut -d' ' -f1", intern = TRUE)`-->
+
+```{r knitr-opts, include = FALSE}
+DOCNAME = "combine"
+knitr::opts_chunk$set(autodep        = TRUE,
+                      cache          = FALSE,
+                      cache.path     = paste0("cache/", DOCNAME, "/"),
+                      cache.comments = TRUE,
+                      echo           = FALSE,
+                      error          = FALSE,
+                      fig.align      = "center",
+                      fig.path       = paste0("figures/", DOCNAME, "/"),
+                      fig.width      = 10,
+                      fig.height     = 8,
+                      dev            = c('svg', 'png'),
+                      message        = FALSE,
+                      warning        = FALSE)
+```
+
+```{r load-libraries, echo = FALSE}
+library("knitr")
+```
+
+```{r load-source, echo = FALSE}
+
+```
+
+```{r additional1, fig.cap = "Diagram of the Simple simulation model. Input parameters are indicated with double borders, blue shading shows those that can be estimated from real data. Red shading indicates the final output.", echo = FALSE}
+include_graphics("../additional/additional1_simple_model.pdf")
+```
+
+```{r additional2, fig.cap = "Diagram of the core Lun simulation model. Input parameters are indicated with double borders, blue shading shows those that can be estimated from real data. Red shading indicates the final output.", echo = FALSE}
+include_graphics("../additional/additional2_lun_model.pdf")
+```
+
+```{r additional3, fig.cap = "Diagram of the Lun 2 simulation model. Input parameters are indicated with double borders, green shading shows those that can be estimated and sampled from real data. Red shading indicates the final output.", echo = FALSE}
+include_graphics("../additional/additional3_lun2_model.pdf")
+```
+
+```{r additional4, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Camp dataset.", echo = FALSE}
+include_graphics("../additional/additional4_Camp_overall.png")
+```
+
+```{r additional5, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Klein dataset.", echo = FALSE}
+include_graphics("../additional/additional5_Klein_overall.png")
+```
+
+```{r additional6, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Tung dataset.", echo = FALSE}
+include_graphics("../additional/additional6_Tung_overall.png")
+```
+
+```{r additional7, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Zeisel dataset.", echo = FALSE}
+include_graphics("../additional/additional7_Zeisel_overall.png")
+```
+
+```{r additional8, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Engel dataset.", echo = FALSE}
+include_graphics("../additional/additional8_Engel_overall.png")
+```
+
+```{r additional9, fig.cap = "Example of a simulated gene that changes expression in a non-linear way over the course of a path. Each point is a cell with the x-axis showing progression along the path and the y-axis the simulated expression level. The blue line shows a LOESS fit.", echo = FALSE}
+include_graphics("../additional/additional9_nonlinear.pdf")
+```
+
+```{r additional10, fig.cap = "Correction of edgeR dispersion estimates. Scatter plot of estimated dispersions against the true simulated values. Estimates of common dispersion obtained from edgeR (green) can be inflated for single-cell data. The Splat simulation uses a linearly corrected value (orange) in its estimation procedure. The red line shows the true values.", echo = FALSE}
+include_graphics("../additional/additional10_disps.pdf")
+```
+
+```{r additional11, fig.cap = "Fitting the mean-zeros relationship. Points show genes in the Tung dataset and the red line is a logistic function fitted to the data using Splat’s estimation procedure.", echo = FALSE}
+include_graphics("../additional/additional11_meanzeros.pdf")
+```

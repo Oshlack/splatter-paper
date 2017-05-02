@@ -115,8 +115,8 @@ gg <- ggplot(df, aes(x = x, y = y)) +
     )
 
 gg
-ggsave("../additional/additional12_meanzeros.png", width = 8, height = 5)
-ggsave("../additional/additional12_meanzeros.pdf", width = 8, height = 5)
+ggsave("../additional/additional11_meanzeros.png", width = 8, height = 5)
+ggsave("../additional/additional11_meanzeros.pdf", width = 8, height = 5)
 ```
 
 Dispersion estimation
@@ -163,8 +163,8 @@ gg <- disps %>%
     )
 
 gg
-ggsave("../additional/additional11_disps.png", width = 8, height = 5)
-ggsave("../additional/additional11_disps.pdf", width = 8, height = 5)
+ggsave("../additional/additional10_disps.png", width = 8, height = 5)
+ggsave("../additional/additional10_disps.pdf", width = 8, height = 5)
 ```
 
 Non-linear genes
@@ -201,8 +201,20 @@ gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$S
     )
 
 gg
-ggsave("../additional/additional10_nonlinear.png", width = 8, height = 5)
-ggsave("../additional/additional10_nonlinear.pdf", width = 8, height = 5)
+ggsave("../additional/additional9_nonlinear.png", width = 8, height = 5)
+ggsave("../additional/additional9_nonlinear.pdf", width = 8, height = 5)
+```
+
+Combined figures
+================
+
+The `additional_figures.Rmd` file combines all the additional figures into a
+single PDF.
+
+```{r additional-figures-render, cache = FALSE, results = "hide"}
+render("additional_figures.Rmd", output_format = "pdf_document",
+       output_file = "additional_figures_1-11.pdf",
+       output_dir = "../additional", envir = new.env())
 ```
 
 Session information
