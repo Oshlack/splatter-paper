@@ -4,7 +4,7 @@ Splatter paper
 Data and analysis for the paper "Splatter: Simulation of Single-cell RNA
 sequencing data".
 
-Directory structrure
+Directory structure
 --------------------
 
 * `additional` - Supplementary figures and files
