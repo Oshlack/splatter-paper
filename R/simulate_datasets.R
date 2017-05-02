@@ -9,7 +9,7 @@
 #' @param bp BiocParallel BPPARAM object
 #'
 #' @return List with the results of Splatter's comparison functions and the
-#' processin time
+#' processing time
 simCompDataset <- function(dataset, root, seed = 1,
                            bp = BiocParallel::SerialParam()) {
     tt <- system.time({ # Start timed section
