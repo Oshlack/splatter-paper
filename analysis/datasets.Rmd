@@ -183,6 +183,20 @@ for (idx in seq_along(plots)) {
             theme(axis.title.x = element_blank(),
                   axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
     }
+
+    # Set y-axis on some plots
+    if (name == "VarsComp") {
+        plot <- plot + coord_cartesian(ylim = c(0, 20))
+    }
+    if (name == "VarsDiff") {
+        plot <- plot + coord_cartesian(ylim = c(-10, 20))
+    }
+    if (name == "MeanVarComp") {
+        plot <- plot + coord_cartesian(ylim = c(0, 30))
+    }
+    if (name == "MeanVarDiff") {
+        plot <- plot + coord_cartesian(ylim = c(-10, 30))
+    }
     
     plots[[idx]] <- plot
 }
