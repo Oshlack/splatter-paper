@@ -6,87 +6,39 @@
 #' @param sce SCESet object
 #'
 #' @details For each gene the parameters for the distributions are estimated
-#' using \code{\link[fitdistrplus]{fitdist}} then the counts for the gene are
-#' tested against a theoretical distribution with those parameters using a
-#' Chi-squared goodness-of-fit test.
+#' using \code{\link[fitdistrplus]{fitdist}} then the goodness of fit is tested
+#' using the Chi-squared statistic from \code{\link[fitdistrplus]{gofstat}}.
 #'
 #' @return SCESet object with additional fData columns
-testGenesGoF <- function(sce) {
+testGenesGoF <-  function(sce) {
     counts <- scater::counts(sce)
 
+    dists <- c(NB = "nbinom", LN = "lnorm", Norm = "norm", Poi = "pois")
+
     stats <- apply(counts, 1, function(gene.counts) {
-        fit <- try(fitdistrplus::fitdist(gene.counts, "nbinom"), silent = TRUE)
 
-        if (class(fit) != "try-error") {
-            mu <- fit$estimate["mu"]
-            size <- fit$estimate["size"]
+        outs <- list()
 
-            gene.hist <- hist(gene.counts, breaks = 10, right = FALSE,
-                              plot = FALSE)
+        for (dist in dists) {
+            fit <- try(fitdistrplus::fitdist(gene.counts, dist), silent = TRUE)
 
-            breaks.cdf <- pnbinom(gene.hist$breaks, mu = mu, size = size)
-            null.probs <- zoo::rollapply(breaks.cdf, 2,
-                                         function(x) {x[2] - x[1]})
+            out <- c(NA, NA)
+            if (class(fit) != "try-error") {
+                gof <- try(fitdistrplus::gofstat(fit), silent = TRUE)
 
-            test <- chisq.test(gene.hist$counts, p = null.probs,
-                               rescale.p = TRUE)
+                if (class(gof) != "try-error") {
+                    out <- c(gof$chisq, gof$chisqpvalue)
+                }
+            }
 
-            out.nb <- c(test$statistic, test$p.value)
-        } else {
-            out.nb <- c(NA, NA)
+            outs <- c(outs, out)
         }
 
-        fit <- try(fitdistrplus::fitdist(gene.counts + 1, "lnorm"),
-                   silent = TRUE)
-
-        if (class(fit) != "try-error") {
-            loc <- fit$estimate["meanlog"]
-            scale <- fit$estimate["sdlog"]
-
-            gene.hist <- hist(gene.counts + 1, breaks = 10, right = FALSE,
-                              plot = FALSE)
-
-            breaks.cdf <- plnorm(gene.hist$breaks, meanlog = loc, sdlog = scale)
-            null.probs <- zoo::rollapply(breaks.cdf, 2,
-                                         function(x) {x[2] - x[1]})
-
-            test <- chisq.test(gene.hist$counts, p = null.probs,
-                               rescale.p = TRUE)
-
-            out.ln <- c(test$statistic, test$p.value)
-        } else {
-            out.ln <- c(NA, NA)
-        }
-
-        fit <- try(fitdistrplus::fitdist(gene.counts, "norm"), silent = TRUE)
-
-        if (class(fit) != "try-error") {
-            mean <- fit$estimate["mean"]
-            sd <- fit$estimate["sd"]
-
-            gene.hist <- hist(gene.counts, breaks = 10, right = FALSE,
-                              plot = FALSE)
-
-            breaks.cdf <- plnorm(gene.hist$breaks, mean = mean, sd = sd)
-            null.probs <- zoo::rollapply(breaks.cdf, 2,
-                                         function(x) {x[2] - x[1]})
-
-            test <- chisq.test(gene.hist$counts, p = null.probs,
-                               rescale.p = TRUE)
-
-            out.norm <- c(test$statistic, test$p.value)
-        } else {
-            out.norm <- c(NA, NA)
-        }
-
-        out <- c(out.nb, out.ln, out.norm)
-        names(out) <- c("NBChi", "NBPVal", "LNChi", "LNPVal", "NormChi",
-                        "NormPVal")
-
-        return(out)
+        outs <- do.call(c, outs)
     })
 
     stats <- data.frame(t(stats))
+    colnames(stats) <- paste0(rep(names(dists), each = 2), c("Chi", "PVal"))
 
     Biobase::fData(sce) <- cbind(Biobase::fData(sce), stats)
 
