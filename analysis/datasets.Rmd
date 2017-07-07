@@ -45,6 +45,7 @@ library("tidyverse")
 ```{r source, cache = FALSE}
 source("../R/load_datasets.R")
 source("../R/simulate_datasets.R")
+source("../R/test_genes.R")
 source("../R/utils.R")
 ```
 
@@ -101,8 +102,17 @@ res <- list()
 
 for (idx in seq_len(nrow(datasets))) {
     dataset <- datasets[idx, ]
+    message("#### STARTING ", dataset["Dataset"], " ####")
+    message("***LOADING COUNTS***")
+    counts <- loadDataset(dataset, root)
+    counts <- counts[rowSums(counts) > 0, ]
+    na.rows <- which(rowSums(is.na(counts)) > 0)
+    if (length(na.rows) > 0) {
+        counts <- counts[-na.rows, ]
+    }
+    counts <- counts[, sample(1:ncol(counts), 200)]
     name <- unlist(dataset["Dataset"])
-    comp <- simCompDataset(dataset, root, bp = bp)
+    comp <- simComp(dataset, root, bp = bp)
     res[[name]] <- comp
     message("Writing comparison...")
     write_rds(comp, path = paste0("../output/res_", name, ".Rds"),
@@ -384,6 +394,27 @@ We also produce a supplementary table of the MADs as a CSV.
 
 ```{r write-summary}
 write_csv(summary, "../additional/additional12_mads.csv")
+```
+
+Gene goodness-of-fit
+====================
+
+```{r goodness-of-fit}
+res$Comp$FeatureData %>%
+    rowwise() %>%
+    mutate(IsNA = all(is.na(NBChi), is.na(LNChi), is.na(NormChi))) %>%
+    #filter(!IsNA) %>%
+    mutate(IsNB = NBPVal > 0.01, IsLN = LNPVal > 0.01,
+           IsNorm = NormPVal > 0.01) %>%
+    ungroup() %>%
+    group_by(Dataset) %>%
+    summarise(NotFit = sum(IsNA), NB = sum(IsNB, na.rm = TRUE),
+              LNorm = sum(IsLN, na.rm = TRUE),
+              Norm = sum(IsNorm, na.rm = TRUE)) %>%
+    gather(key = Dist, value = Count, -Dataset) %>%
+    ggplot(aes(x = Dataset, y = Count, fill = Dist)) +
+    geom_bar(stat = "identity", width = 0.4, 
+             position = position_dodge(width = 0.5))
 ```
 
 Session info

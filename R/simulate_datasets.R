@@ -1,33 +1,22 @@
-#' Simulate and compare dataset
+#' Simulate and compare
 #'
-#' Takes a vector describing a dataset, loads the datasets, estimates parameters
-#' and simulates data using various models and retuns a comparison.
+#' Takes a counts matrix, estimates parameters and simulates data using various
+#' models and retuns a comparison.
 #'
-#' @param dataset Vector describing a real dataset
-#' @param root Root path where data is stored
+#' @param counts Counts matrix to estimate parameters from
 #' @param seed Random seed
 #' @param bp BiocParallel BPPARAM object
 #'
 #' @return List with the results of Splatter's comparison functions and the
 #' processing times
-simCompDataset <- function(dataset, root, seed = 1,
-                           bp = BiocParallel::SerialParam()) {
+simComp <- function(counts, seed = 1, bp = BiocParallel::SerialParam()) {
 
-    timings <- matrix(nrow = 7, ncol = 2)
+    timings <- matrix(nrow = 8, ncol = 2)
     rownames(timings) <- c("Splat", "SplatDrop", "Simple", "Lun", "Lun2",
-                           "Lun2ZINB", "scDD")
+                           "Lun2ZINB", "scDD", "BASiCS")
     colnames(timings) <- c("Estimation", "Simulation")
 
     set.seed(seed)
-    message("#### STARTING ", dataset["Dataset"], " ####")
-    message("***LOADING COUNTS***")
-    counts <- loadDataset(dataset, root)
-    counts <- counts[rowSums(counts) > 0, ]
-    na.rows <- which(rowSums(is.na(counts)) > 0)
-    if (length(na.rows) > 0) {
-        counts <- counts[-na.rows, ]
-    }
-    counts <- counts[, sample(1:ncol(counts), 200)]
 
     sims <- list(Real = scater::newSCESet(countData = counts))
 
@@ -86,22 +75,31 @@ simCompDataset <- function(dataset, root, seed = 1,
     timings["scDD", "Estimation"] <- system.time(
     params <- splatter::scDDEstimate(counts,
                                      conditions = sample(1:2, ncol(counts),
-                                                         replace = TRUE))
+                                                         replace = TRUE),
+                                     BPPARAM = bp)
     )[3]
 
-    half.nGenes <- round(nrow(counts) / 2)
     timings["scDD", "Simulation"] <- system.time(
-    sim.scDD <- splatter::scDDSimulate(params, nCells = round(ncol(counts) / 2),
-                                       nDE = 0, nDP = 0, nDM = 0, nDB = 0,
-                                       nEE = half.nGenes,
-                                       nEP = nrow(counts) - half.nGenes,
+    sims$scDD <- splatter::scDDSimulate(params, nCells = round(ncol(counts) / 2),
                                        seed = seed, verbose = FALSE,
                                        BPPARAM = bp)
     )[3]
-    sims$scDD <- sim.scDD
+
+    message("***ADDING BASiCS***")
+    timings["BASiCS", "Estimation"] <- system.time(
+        params <- splatter::BASiCSEstimate(counts,
+                                           batch = sample(1:2, ncol(counts),
+                                                          replace = TRUE),
+                                           verbose = FALSE, progress = FALSE)
+    )[3]
+
+    timings["BASiCS", "Simulation"] <- system.time(
+        sims$BASiCS <- splatter::BASiCSSimulate(params, seed = seed,
+                                                verbose = FALSE)
+    )[3]
 
     message("***TESTING GENE GoF***")
-    sims <- bplapply(sims, testGenesGoF, BPPARAM = bp)
+    sims <- BiocParallel::bplapply(sims, testGenesGoF, BPPARAM = bp)
 
     message("***COMPARING DATASETS***")
     cols <- scales::hue_pal()(length(sims))
