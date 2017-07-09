@@ -92,5 +92,6 @@ loadDataset <- function(dataset, root) {
         stop("Dataset not valid")
     }
 
+    rownames(counts) <- paste0("G", seq_len(nrow(counts)))
     return(counts)
 }
