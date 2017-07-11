@@ -1,0 +1,207 @@
+---
+title: "Performance"
+author: "Luke Zappia"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+Code version: `r system("git log -1 --format=oneline | cut -d' ' -f1", intern = TRUE)`
+
+```{r knitr, include = FALSE}
+DOCNAME = "performance"
+knitr::opts_chunk$set(autodep        = TRUE,
+                      cache          = TRUE,
+                      cache.path     = paste0("cache/", DOCNAME, "/"),
+                      cache.comments = TRUE,
+                      echo           = TRUE,
+                      error          = FALSE,
+                      fig.align      = "center",
+                      fig.path       = paste0("figures/", DOCNAME, "/"),
+                      fig.width      = 10,
+                      fig.height     = 8,
+                      dev            = c('svg', 'png'),
+                      message        = FALSE,
+                      warning        = FALSE)
+```
+
+```{r libraries, cache = FALSE}
+# RNA-seq
+library("scater")
+library("splatter")
+
+# Parallel
+library("BiocParallel")
+
+# Plotting
+library("cowplot")
+
+# Tables
+library("knitr")
+
+# Tidyverse
+library("tidyverse")
+```
+
+```{r source, cache = FALSE}
+source("../R/load_datasets.R")
+source("../R/simulate_datasets.R")
+```
+
+```{r ggtheme, cache = FALSE}
+```
+
+Introduction
+============
+
+In this document we are going to look at how the estimation and simulation
+procedures perform as the number of genes and cells increases.
+
+Data
+====
+
+We have a variety of real datasets we could use. Let's load the metadata file
+and take a look.
+
+```{r datasets}
+root <- "../data"
+datasets <- read_tsv(file.path(root, "datasets.txt"),
+                     col_types = cols(.default = col_character(),
+                                      NumCells = col_integer()
+                                      )
+                     )
+datasets
+```
+
+For this experiment we are going to use just the Tung dataset.
+
+```{r dataset}
+dataset <- datasets[datasets$Dataset == "Tung", ]
+counts <- loadDataset(dataset, root)
+```
+
+Genes
+=====
+
+Let's have a look at how the performance of the different models is affected
+by an increasing number of genes with 100 cells.
+
+```{r counts-100}
+# Select 100 random cells
+counts.100 <- counts[, sample(1:ncol(counts), 100)]
+counts.100 <- counts.100[rowSums(counts.100) > 0, ]
+```
+
+```{r genes}
+bp <- BiocParallel::MulticoreParam(10)
+
+res <- bplapply(c(500, 1000, 1500, 2000), function(nGenes) {
+    message("#### ", Sys.time(), " STARTING ", nGenes, " genes ####")
+    set.seed(1)
+    counts.100.nGenes <- counts.100[sample(1:nrow(counts.100), nGenes), ]
+    times <- simComp(counts.100.nGenes, compare = FALSE,
+                     test.gof = FALSE, verbose = TRUE)$Timings
+    times <- times %>%
+        data.frame() %>%
+        rownames_to_column("Model") %>%
+        mutate(nGenes = nGenes)
+    message("#### ", Sys.time(), " All done! ####")
+    return(times)
+}, BPPARAM = bp)
+
+timings <- bind_rows(res)
+```
+
+```{r plot-genes}
+# Select the colours we are going to use
+cols <- RColorBrewer::brewer.pal(9, "Set1")
+
+# Labels for datasets
+labels = c("Real" = "Real", "Splat" = "Splat", "SplatDrop" = "Splat (Drop)",
+           "Simple" = "Simple", "Lun" = "Lun", "Lun2" = "Lun 2",
+           "Lun2ZINB" = "Lun 2 (ZINB)", "scDD" = "scDD", "BASiCS" = "BASiCS")
+
+timings %>%
+    mutate(Model = factor(Model, levels = c("Splat", "SplatDrop", "Simple",
+                                            "Lun", "Lun2", "Lun2ZINB", "scDD",
+                                            "BASiCS"))) %>%
+    gather(key = "Type", value = "Time", -Model, -nGenes) %>%
+    filter(!(Model == "SplatDrop" & Type == "Estimation")) %>%
+    filter(!(Model == "Lun2ZINB" & Type == "Estimation")) %>%
+    ggplot(aes(x = nGenes, y = Time, colour = Model)) +
+    geom_line() +
+    geom_point() +
+    scale_colour_manual(values = cols[-1], labels = labels[-1]) +
+    scale_y_log10(labels = scales::comma) +
+    facet_wrap(~ Type, nrow = 2, scales = "free") +
+    ggtitle("Processing times (genes)") +
+    xlab("Number of genes") +
+    ylab("Time (seconds)") +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(size = 20),
+          legend.position = "bottom")
+```
+
+```{r save-genes}
+write_tsv(timings, "../output/performance_genes.tsv")
+```
+
+Cells
+=====
+
+We can do the same thing with increasing numbers of cells. Here we will use
+1000 genes.
+
+```{r cells}
+res <- bplapply(c(50, 100, 150, 200), function(nCells) {
+    message("#### ", Sys.time(), " STARTING ", nCells, " genes ####")
+    set.seed(1)
+    counts.nCells <- counts[, sample(1:ncol(counts), nCells)]
+    counts.nCells <- counts.nCells[rowSums(counts.nCells) > 0, ]
+    counts.nCells.1k <- counts.nCells[sample(1:nrow(counts.nCells), 1000), ]
+    times <- simComp(counts.nCells.1k, compare = FALSE,
+                     test.gof = FALSE, verbose = TRUE)$Timings
+    times <- times %>%
+        data.frame() %>%
+        rownames_to_column("Model") %>%
+        mutate(nCells = nCells)
+    message("#### ", Sys.time(), " All done! ####")
+    return(times)
+}, BPPARAM = bp)
+
+timings <- bind_rows(res)
+```
+
+```{r plot-cells}
+timings %>%
+    mutate(Model = factor(Model, levels = c("Splat", "SplatDrop", "Simple",
+                                            "Lun", "Lun2", "Lun2ZINB", "scDD",
+                                            "BASiCS"))) %>%
+    gather(key = "Type", value = "Time", -Model, -nCells) %>%
+    filter(!(Model == "SplatDrop" & Type == "Estimation")) %>%
+    filter(!(Model == "Lun2ZINB" & Type == "Estimation")) %>%
+    ggplot(aes(x = nCells, y = Time, colour = Model)) +
+    geom_line() +
+    geom_point() +
+    scale_colour_manual(values = cols[-1], labels = labels[-1]) +
+    scale_y_log10(labels = scales::comma) +
+    facet_wrap(~ Type, nrow = 2, scales = "free") +
+    ggtitle("Processing times (cells)") +
+    xlab("Number of cells") +
+    ylab("Time (seconds)") +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(size = 20),
+          legend.position = "bottom")
+```
+
+```{r save-cells}
+write_tsv(timings, "../output/performance_cells.tsv")
+```
+
+Session info
+============
+
+```{r session-info, cache = FALSE}
+devtools::session_info()
+```
