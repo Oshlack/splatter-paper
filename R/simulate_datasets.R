@@ -1,21 +1,18 @@
-#' Simulate and compare
+#' Simulate dataset
 #'
 #' Takes a counts matrix, estimates parameters and simulates data using various
-#' models and retuns a comparison.
+#' models.
 #'
 #' @param counts Counts matrix to estimate parameters from
 #' @param sims Vector of simulations to compare
 #' @param seed Random seed
-#' @param compare Whether to produce a comparison of simulations
-#' @param test.gof Whether to test gene goodness-of-fit
 #' @param bp BiocParallel BPPARAM object
 #'
-#' @return List with the results of Splatter's comparison functions and the
-#' processing times
-simComp <- function(counts, models = c("Splat", "SplatDrop", "Simple", "Lun",
+#' @return List with the simulations and the processing times
+simData <- function(counts, models = c("Splat", "SplatDrop", "Simple", "Lun",
                                        "Lun2", "Lun2ZINB", "scDD", "BASiCS"),
-                    compare = TRUE, test.gof = TRUE, seed = 1,
-                    verbose = FALSE, bp = BiocParallel::SerialParam()){
+                    seed = 1, verbose = FALSE,
+                    bp = BiocParallel::SerialParam()){
 
     # Total processing time
     ttime <- system.time({
@@ -145,7 +142,8 @@ simComp <- function(counts, models = c("Splat", "SplatDrop", "Simple", "Lun",
     return(list(Sims = sims, Timings = timings))
 }
 
-
+#' @param compare Whether to produce a comparison of simulations
+#' @param test.gof Whether to test gene goodness-of-fit
 #if (test.gof) {
 #    message("***TESTING GENE GoF***")
 #    sims <- BiocParallel::bplapply(sims, testGenesGoF, BPPARAM = bp)
