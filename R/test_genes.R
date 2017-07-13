@@ -20,7 +20,9 @@ testGenesGoF <-  function(sce) {
         outs <- list()
 
         for (dist in dists) {
+            dummy <- capture.output(
             fit <- try(fitdistrplus::fitdist(gene.counts, dist), silent = TRUE)
+            )
 
             out <- c(NA, NA)
             if (class(fit) != "try-error") {
