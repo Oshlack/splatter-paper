@@ -95,33 +95,133 @@ The next step is to load in the datasets, estimate parameters from them,
 simulate using the various models in Splatter and compare the results. Here we
 do that for each dataset. We also produce an overall comparison panel.
 
-```{r simulate, cache.lazy = FALSE}
+```{r counts}
 bp <- BiocParallel::MulticoreParam(10)
 
-res <- list()
-
-for (idx in seq_len(nrow(datasets))) {
+counts <- bplapply(seq_len(nrow(datasets)), function(idx){
+    set.seed(1)
     dataset <- datasets[idx, ]
-    message("#### STARTING ", dataset["Dataset"], " ####")
-    message("***LOADING COUNTS***")
+    name <- unlist(dataset["Dataset"])
+    message("***LOADING ", name, "***")
     counts <- loadDataset(dataset, root)
-    counts <- counts[rowSums(counts) > 0, ]
     na.rows <- which(rowSums(is.na(counts)) > 0)
     if (length(na.rows) > 0) {
         counts <- counts[-na.rows, ]
     }
     counts <- counts[, sample(1:ncol(counts), 200)]
+    counts <- counts[rowSums(counts) > 0, ]
+}, BPPARAM = bp)
+names(counts) <- datasets$Dataset
+```
+
+```{r simulate, cache.lazy = FALSE}
+sims <- list()
+times <- list()
+
+for (name in names(counts)) {
+    set.seed(1)
+    counts.dataset <- counts[[name]]
+    message("#### ", Sys.time(), " STARTING ", name, " ####")
+    sim.dataset <- simData(counts.dataset,
+                           models = c("Splat", "SplatDrop", "Simple", "Lun",
+                                       "Lun2", "Lun2ZINB", "scDD"),
+                           verbose = TRUE, bp = bp)
+    sims[[name]] <- sim.dataset$Sims
+    times[[name]] <- sim.dataset$Timings
+    message("Writing simulations...")
+    write_rds(sim.dataset, path = paste0("../output/sim_", name, ".Rds"),
+              compress = "gz")
+    message("#### ", Sys.time(), " FINISHED ", name, " ####")
+}
+```
+
+```{r simulate-BASiCS}
+sim.BASiCS <- bplapply(names(counts), function(name) {
+    set.seed(1)
+    message("#### ", Sys.time(), " STARTING ", name, " ####")
+    counts.dataset <- round(counts[[name]])
+    time.est <- system.time(
+        params <- BASiCSEstimate(counts.dataset,
+                                 batch = sample(1:2, ncol(counts.dataset),
+                                                replace = TRUE),
+                                 verbose = FALSE, progress = FALSE)
+    )[3]
+    time.sim <- system.time(
+            sim <- BASiCSSimulate(params, seed = 1, verbose = FALSE)
+    )[3]
+    message(name, " done!")
+    message("#### ", Sys.time(), " FINISHED ", name, " ####")
+    list(Sim = sim, Timings = c(Estimation = time.est, Simulation = time.sim))
+}, BPPARAM = bp)
+
+write_rds(sim.BASiCS, path = paste0("../output/sim_BASiCS.Rds"),
+              compress = "gz")
+```
+
+```{r sim-old, eval = FALSE}
+for (idx in seq_len(nrow(datasets))) {
+    set.seed(1)
+    dataset <- datasets[idx, ]
+    message("#### STARTING ", dataset["Dataset"], " ####")
     name <- unlist(dataset["Dataset"])
-    comp <- simComp(dataset, root, bp = bp)
+    comp <- simComp(counts, bp = bp)
     res[[name]] <- comp
     message("Writing comparison...")
     write_rds(comp, path = paste0("../output/res_", name, ".Rds"),
               compress = "gz")
     message("All done!")
 }
+
+for (name in names(sims)) {
+    sims[[name]]$BASiCS <- sim.BASiCS[[name]]$Sim
+    times[[name]] <- rbind(times[[name]], BASiCS = sim.BASiCS[[name]]$Timings)
+}
 ```
 
-```{r make-overall, cache.lazy=FALSE}
+```{r add-BASiCS, cache.lazy = FALSE}
+names(sim.BASiCS) <- names(counts)
+
+sims <- lapply(names(sims), function(name) {
+    sims.dataset <- sims[[name]]
+    sims.dataset$BASiCS <- sim.BASiCS[[name]]$Sim
+    return(sims.dataset)
+})
+names(sims) <- names(counts)
+
+times <- lapply(names(times), function(name) {
+    times.dataset <- times[[name]]
+    times.dataset <- rbind(times.dataset, BASiCS = sim.BASiCS[[name]]$Timings)
+    return(times.dataset)
+})
+names(times) <- names(counts)
+```
+
+```{r test-gene-gof, cache.lazy = FALSE}
+sims <- lapply(names(sims), function(name) {
+    message("#### ", Sys.time(), " STARTING ", name, " ####")
+    sims.dataset <- sims[[name]]
+    sims.dataset <- bplapply(sims.dataset, testGenesGoF, BPPARAM = bp)
+    message("#### ", Sys.time(), " FINISHED ", name, " ####")
+    return(sims.dataset)
+})
+
+names(sims) <- names(counts)
+```
+
+```{r compare-sims, cache.lazy = FALSE}
+res <- bplapply(names(sims), function(name) {
+    sims.dataset <- sims[[name]]
+    comp <- compareSCESets(sims.dataset, point.size = 0.3)
+    diff <- diffSCESets(sims.dataset, ref = "Real", point.size = 0.3)
+    list(Comp = comp, Diff = diff)
+}, BPPARAM = bp)
+
+names(res) <- names(sims)
+
+write_rds(res, path = "../output/res_all.Rds", compress = "gz")
+```
+
+```{r make-overall}
 for (idx in seq_along(res)) {
     name <- names(res)[idx]
     message(paste("Making", name, "overall panel..."))
@@ -153,13 +253,13 @@ plots <- list(MeansComp   = res$Tung$Comp$Plots$Means,
               LibSizeComp = res$Tung$Comp$Plots$LibrarySizes,
               LibSizeDiff = res$Tung$Diff$Plots$LibrarySizes)
 
-# Select the colour we are going to use
-cols <- RColorBrewer::brewer.pal(8, "Dark2")
+# Select the colours we are going to use
+cols <- RColorBrewer::brewer.pal(9, "Set1")
 
 # Labels for datasets
 labels = c("Real" = "Real", "Splat" = "Splat", "SplatDrop" = "Splat (Drop)",
            "Simple" = "Simple", "Lun" = "Lun", "Lun2" = "Lun 2",
-           "Lun2ZINB" = "Lun 2 (ZINB)")
+           "Lun2ZINB" = "Lun 2 (ZINB)", "scDD" = "scDD", "BASiCS" = "BASiCS")
 
 # Make adjustments to the plots
 for (idx in seq_along(plots)) {
@@ -185,11 +285,7 @@ for (idx in seq_along(plots)) {
     if (!grepl("MeanVar", name)) {
         plot <- plot + geom_boxplot(aes(fill = Dataset),
                                     size = 1.5, alpha = 0.2) +
-            scale_x_discrete(labels = c("Splat" = "Splat",
-                                        "SplatDrop" = "Splat (Drop)",
-                                        "Simple" = "Simple", "Lun" = "Lun",
-                                        "Lun2" = "Lun 2",
-                                        "Lun2ZINB" = "Lun 2 (ZINB)")) +
+            scale_x_discrete(labels = labels[-1]) +
             theme(axis.title.x = element_blank(),
                   axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
     }
@@ -279,11 +375,7 @@ for (idx in seq_along(plots)) {
     if (!grepl("MeanZeros", name)) {
         plot <- plot + geom_boxplot(aes(fill = Dataset),
                                     size = 1.5, alpha = 0.2) +
-            scale_x_discrete(labels = c("Splat" = "Splat",
-                                        "SplatDrop" = "Splat (Drop)",
-                                        "Simple" = "Simple", "Lun" = "Lun",
-                                        "Lun2" = "Lun 2",
-                                        "Lun2ZINB" = "Lun 2 (ZINB)")) +
+            scale_x_discrete(labels = labels[-1]) +
             theme(axis.title.x = element_blank(),
                   axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
     }
@@ -358,11 +450,7 @@ summary %>%
     ggplot(aes(x = Simulation, y = Statistic, fill = Rank, label = MAD)) +
     geom_tile() +
     viridis::scale_fill_viridis(direction = -1, discrete = TRUE) +
-    scale_x_discrete(labels = c("Splat" = "Splat",
-                                "SplatDrop" = "Splat (Drop)",
-                                "Simple" = "Simple", "Lun" = "Lun",
-                                "Lun2" = "Lun 2",
-                                "Lun2ZINB" = "Lun 2 (ZINB)")) +
+    scale_x_discrete(labels = labels[-1]) +
     scale_y_discrete(labels = c("Mean" = "Mean", "Variance" = "Variance",
                                 "MeanVar" = "Mean-Variance",
                                 "LibSize" = "Library Size",
@@ -392,29 +480,90 @@ ggsave("../figures/figure4_mads_heatmap.png",
 
 We also produce a supplementary table of the MADs as a CSV.
 
-```{r write-summary}
+```{r write-summary, eval = FALSE}
 write_csv(summary, "../additional/additional12_mads.csv")
 ```
 
 Gene goodness-of-fit
 ====================
 
-```{r goodness-of-fit}
-res$Comp$FeatureData %>%
-    rowwise() %>%
-    mutate(IsNA = all(is.na(NBChi), is.na(LNChi), is.na(NormChi))) %>%
-    #filter(!IsNA) %>%
-    mutate(IsNB = NBPVal > 0.01, IsLN = LNPVal > 0.01,
-           IsNorm = NormPVal > 0.01) %>%
-    ungroup() %>%
-    group_by(Dataset) %>%
-    summarise(NotFit = sum(IsNA), NB = sum(IsNB, na.rm = TRUE),
-              LNorm = sum(IsLN, na.rm = TRUE),
-              Norm = sum(IsNorm, na.rm = TRUE)) %>%
-    gather(key = Dist, value = Count, -Dataset) %>%
+```{r get-gofs}
+gofs <- lapply(names(res), function(name) {
+    res[[name]]$Comp$FeatureData %>%
+        rowwise() %>%
+        mutate(IsNA = all(is.na(NBChi), is.na(LNChi), is.na(NormChi),
+                          is.na(PoiChi))) %>%
+        #filter(!IsNA) %>%
+        mutate(IsNB = NBPVal > 0.01, IsLN = LNPVal > 0.01,
+               IsNorm = NormPVal > 0.01, IsPoi = PoiPVal> 0.01) %>%
+        ungroup() %>%
+        group_by(Dataset) %>%
+        summarise(NotFit = sum(IsNA),
+                  NB = sum(IsNB, na.rm = TRUE),
+                  LNorm = sum(IsLN, na.rm = TRUE),
+                  Norm = sum(IsNorm, na.rm = TRUE),
+                  Poi = sum(IsPoi, na.rm = TRUE)) %>%
+        gather(key = Dist, value = Count, -Dataset) %>%
+        mutate(RealData = name)
+})
+
+gofs <- bind_rows(gofs)
+```
+
+```{r plot-goodness-of-fit}
+gofs %>%
+    mutate(Dist = factor(Dist, levels = c("Poi", "NB", "LNorm", "Norm",
+                                          "NotFit"))) %>%
     ggplot(aes(x = Dataset, y = Count, fill = Dist)) +
     geom_bar(stat = "identity", width = 0.4, 
-             position = position_dodge(width = 0.5))
+             position = position_dodge(width = 0.5)) +
+    scale_x_discrete(labels = labels[-1]) +
+    scale_fill_brewer(palette = "Set2", name = "Distribution",
+                      labels = c("Poisson", "Negative Binomial", "Log-normal",
+                                 "Normal", "Not Fit")) +
+    facet_wrap(~ RealData, nrow = length(unique(gofs$Realdata)),
+               scale = "free_x") +
+    ggtitle("Gene goodness-of-fit") +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.title.x = element_blank(),
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(size = 20),
+          legend.position = "bottom")
+```
+
+Timings
+=======
+
+```{r get-timings}
+timings <- lapply(names(times), function(name) {
+    times[[name]] %>%
+        data.frame() %>%
+        rownames_to_column("Model") %>%
+        gather(key = "Type", value = "Time", -Model) %>%
+        mutate(Dataset = name)
+})
+
+timings <- bind_rows(timings)
+```
+
+```{r plot-timings}
+timings %>%
+    mutate(Model = factor(Model, levels = c("Splat", "SplatDrop", "Simple",
+                                            "Lun", "Lun2", "Lun2ZINB", "scDD",
+                                            "BASiCS"))) %>%
+    ggplot(aes(x = Model, y = Time, fill = Dataset)) +
+    geom_bar(stat = "identity", width = 0.4, 
+             position = position_dodge(width = 0.5)) +
+    scale_x_discrete(labels = labels[-1]) +
+    scale_fill_brewer(palette = "Dark2") +
+    facet_wrap(~ Type, nrow = 2, scale = "free_x") +
+    ggtitle("Processing times") +
+    ylab("Time (seconds)") +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.title.x = element_blank(),
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(size = 20),
+          legend.position = "bottom")
 ```
 
 Session info
