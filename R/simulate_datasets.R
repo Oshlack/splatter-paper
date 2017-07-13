@@ -17,7 +17,7 @@ simData <- function(counts, models = c("Splat", "SplatDrop", "Simple", "Lun",
     # Total processing time
     ttime <- system.time({
 
-    timings <- matrix(nrow = 8, ncol = 2)
+    timings <- matrix(nrow = length(models), ncol = 2)
     rownames(timings) <- models
     colnames(timings) <- c("Estimation", "Simulation")
 
@@ -68,7 +68,8 @@ simData <- function(counts, models = c("Splat", "SplatDrop", "Simple", "Lun",
             params <- splatter::lunEstimate(counts)
         )[3]
         timings["Lun", "Simulation"] <- system.time(
-            sims$Lun <- splatter::lunSimulate(params, verbose = verbose, seed = seed)
+            sims$Lun <- splatter::lunSimulate(params, verbose = verbose,
+                                              seed = seed)
         )[3]
     }
 
