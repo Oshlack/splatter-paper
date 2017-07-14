@@ -19,7 +19,7 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       fig.path       = paste0("figures/", DOCNAME, "/"),
                       fig.width      = 10,
                       fig.height     = 8,
-                      dev            = c('svg', 'png'),
+                      dev            = c('png'),
                       message        = FALSE,
                       warning        = FALSE)
 ```
@@ -481,7 +481,7 @@ ggsave("../figures/figure4_mads_heatmap.png",
 We also produce a supplementary table of the MADs as a CSV.
 
 ```{r write-summary, eval = FALSE}
-write_csv(summary, "../additional/additional12_mads.csv")
+write_csv(summary, "../additional/additional16_mads.csv")
 ```
 
 Gene goodness-of-fit
@@ -521,7 +521,7 @@ gofs %>%
     scale_fill_brewer(palette = "Set2", name = "Distribution",
                       labels = c("Poisson", "Negative Binomial", "Log-normal",
                                  "Normal", "Not Fit")) +
-    facet_wrap(~ RealData, nrow = length(unique(gofs$Realdata)),
+    facet_wrap(~ RealData, nrow = length(unique(gofs$RealData)),
                scale = "free_x") +
     ggtitle("Gene goodness-of-fit") +
     theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
@@ -529,6 +529,11 @@ gofs %>%
           strip.background = element_rect(fill = "white"),
           strip.text = element_text(size = 20),
           legend.position = "bottom")
+
+ggsave("../additional/additional9_gene_gof.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../additional/additional9_gene_gof.png",
+       width = 20, height = 25, units = "cm")
 ```
 
 Timings
@@ -551,19 +556,44 @@ timings %>%
     mutate(Model = factor(Model, levels = c("Splat", "SplatDrop", "Simple",
                                             "Lun", "Lun2", "Lun2ZINB", "scDD",
                                             "BASiCS"))) %>%
-    ggplot(aes(x = Model, y = Time, fill = Dataset)) +
-    geom_bar(stat = "identity", width = 0.4, 
-             position = position_dodge(width = 0.5)) +
+    filter(!(Model == "SplatDrop" & Type == "Estimation")) %>%
+    filter(!(Model == "Lun2ZINB" & Type == "Estimation")) %>%
+    ggplot(aes(x = Model, y = Time, colour = Dataset)) +
+    #geom_bar(stat = "identity", width = 0.4, 
+    #         position = position_dodge(width = 0.5)) +
+    geom_jitter(size = 3, width = 0.2, height = 0) +
     scale_x_discrete(labels = labels[-1]) +
-    scale_fill_brewer(palette = "Dark2") +
-    facet_wrap(~ Type, nrow = 2, scale = "free_x") +
-    ggtitle("Processing times") +
+    scale_colour_brewer(palette = "Dark2") +
+    scale_y_log10(labels = scales::comma) +
+    facet_wrap(~ Type, nrow = 2, scale = "free") +
+    ggtitle("Processing times (datasets)") +
     ylab("Time (seconds)") +
     theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
           axis.title.x = element_blank(),
           strip.background = element_rect(fill = "white"),
           strip.text = element_text(size = 20),
           legend.position = "bottom")
+
+ggsave("../additional/additional15_timings.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../additional/additional15_timings.png",
+       width = 20, height = 25, units = "cm")
+```
+
+Tung (filtered)
+===============
+
+```{r tung-filtered-sim}
+counts.tung <- counts$Tung
+counts.tung <- counts.tung[rowMeans(counts.tung == 0) < 0.75, ]
+
+sims.tung <- simData(counts.tung, verbose = TRUE, bp = bp)
+```
+
+```{r tung-filtered-comp}
+comp.tung <- compareSCESets(sims.tung$Sims, point.size = 0.3)
+diff.tung <- diffSCESets(sims.tung$Sims, ref = "Real", point.size = 0.3)
+plt.tung <- makeOverallPanel(comp.tung, diff.tung, title = "Tung (filtered)")
 ```
 
 Session info

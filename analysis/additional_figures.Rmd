@@ -1,6 +1,6 @@
 ---
 title: "Additional figures"
-date: '`r Sys.Date()`'
+#date: '`r Sys.Date()`'
 output:
   pdf_document: 
     fig_caption: yes
@@ -65,14 +65,30 @@ include_graphics("../additional/additional7_Zeisel_overall.png")
 include_graphics("../additional/additional8_Engel_overall.png")
 ```
 
-```{r additional9, fig.cap = "Example of a simulated gene that changes expression in a non-linear way over the course of a path. Each point is a cell with the x-axis showing progression along the path and the y-axis the simulated expression level. The blue line shows a LOESS fit.", echo = FALSE}
-include_graphics("../additional/additional9_nonlinear.pdf")
+```{r additional9, fig.cap = "Barplots of gene goodness-of-fit for each dataset. Parameters for the Poisson, negative binomial, log-normal and normal distributions were fit to each gene. A chi-squared goodness-of-fit test was then used to see if the counts for that gene could be expected to come from the fitted distributions. The height of the bars show the number of genes for which a given distribution was not rejected (p > 0.01), as well as the number of genes for which fitting failed for all distributions.", echo = FALSE}
+include_graphics("../additional/additional9_gene_gof.png")
 ```
 
-```{r additional10, fig.cap = "Correction of edgeR dispersion estimates. Scatter plot of estimated dispersions against the true simulated values. Estimates of common dispersion obtained from edgeR (green) can be inflated for single-cell data. The Splat simulation uses a linearly corrected value (orange) in its estimation procedure. The red line shows the true values.", echo = FALSE}
-include_graphics("../additional/additional10_disps.pdf")
+```{r additional10, fig.cap = "Example of a simulated gene that changes expression in a non-linear way over the course of a path. Each point is a cell with the x-axis showing progression along the path and the y-axis the simulated expression level. The blue line shows a LOESS fit.", echo = FALSE}
+include_graphics("../additional/additional10_nonlinear.pdf")
 ```
 
-```{r additional11, fig.cap = "Fitting the mean-zeros relationship. Points show genes in the Tung dataset and the red line is a logistic function fitted to the data using Splat’s estimation procedure.", echo = FALSE}
-include_graphics("../additional/additional11_meanzeros.pdf")
+```{r additional11, fig.cap = "Correction of edgeR dispersion estimates. Scatter plot of estimated dispersions against the true simulated values. Estimates of common dispersion obtained from edgeR (green) can be inflated for single-cell data. The Splat simulation uses a linearly corrected value (orange) in its estimation procedure. The red line shows the true values.", echo = FALSE}
+include_graphics("../additional/additional11_disps.pdf")
+```
+
+```{r additional12, fig.cap = "Fitting the mean-zeros relationship. Points show genes in the Tung dataset and the red line is a logistic function fitted to the data using Splat’s estimation procedure.", echo = FALSE}
+include_graphics("../additional/additional12_meanzeros.pdf")
+```
+
+```{r additional13, fig.cap = "Benchmarking of processing times with incresing numbers of genes. The number of genes in the input dataset is given on the x-axis and the processing time in seconds on the y-axis on a log scale. Each simulation is shown in a different colour with the top panel showing the estimation time and the bottom the simulation time. The Splat (Drop) and Lun 2 (ZINB) simulations are not shown in the estimation panel as the parameters for these are estimated at the same time as their regular variants.", echo = FALSE}
+include_graphics("../additional/additional13_benchmark_genes.pdf")
+```
+
+```{r additional14, fig.cap = "Benchmarking of processing times with incresing numbers of cells. This figure is the same as Additional figure 13 except that the x-axis shows an incresing number of cells rather than genes.", echo = FALSE}
+include_graphics("../additional/additional14_benchmark_cells.pdf")
+```
+
+```{r additional15, fig.cap = "Processing times for the different datasets. The various simulation models are shown on the x-axis and the times they took for estimation (top) and simulation (bottom) in seconds are given on the y-axis on a log scale. The scDD estimation, Lun 2 estimation and scDD simulation processes were run on 10 cores, all other processes were run on a single core.", echo = FALSE}
+include_graphics("../additional/additional15_timings.pdf")
 ```

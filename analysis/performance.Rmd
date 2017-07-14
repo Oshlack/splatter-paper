@@ -140,6 +140,11 @@ timings %>%
           strip.background = element_rect(fill = "white"),
           strip.text = element_text(size = 20),
           legend.position = "bottom")
+
+ggsave("../additional/additional12_benchmark_genes.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../additional/additional12_benchmark_genes.png",
+       width = 20, height = 25, units = "cm")
 ```
 
 ```{r save-genes}
@@ -193,6 +198,11 @@ timings %>%
           strip.background = element_rect(fill = "white"),
           strip.text = element_text(size = 20),
           legend.position = "bottom")
+
+ggsave("../additional/additional13_benchmark_cells.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../additional/additional13_benchmark_cells.png",
+       width = 20, height = 25, units = "cm")
 ```
 
 ```{r save-cells}

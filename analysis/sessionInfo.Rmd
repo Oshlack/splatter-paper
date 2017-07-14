@@ -1,5 +1,5 @@
 ---
-title: "SessionInfo"
+title: "R Session Information"
 date: '`r Sys.Date()`'
 output:
   pdf_document: default

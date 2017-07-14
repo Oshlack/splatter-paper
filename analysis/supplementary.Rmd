@@ -115,8 +115,8 @@ gg <- ggplot(df, aes(x = x, y = y)) +
     )
 
 gg
-ggsave("../additional/additional11_meanzeros.png", width = 8, height = 5)
-ggsave("../additional/additional11_meanzeros.pdf", width = 8, height = 5)
+ggsave("../additional/additional12_meanzeros.png", width = 8, height = 5)
+ggsave("../additional/additional12_meanzeros.pdf", width = 8, height = 5)
 ```
 
 Dispersion estimation
@@ -163,8 +163,8 @@ gg <- disps %>%
     )
 
 gg
-ggsave("../additional/additional10_disps.png", width = 8, height = 5)
-ggsave("../additional/additional10_disps.pdf", width = 8, height = 5)
+ggsave("../additional/additional11_disps.png", width = 8, height = 5)
+ggsave("../additional/additional11_disps.pdf", width = 8, height = 5)
 ```
 
 Non-linear genes
@@ -175,7 +175,8 @@ non-linear changes in expression over the course of a differentiation
 trajectory. We simulate a path and then filter out some of the non-linear genes.
 
 ```{r non-linear}
-sim <- splatSimulatePaths(de.facLoc = 0.1, de.facScale = 0.4, seed = 1)
+set.seed(1)
+sim <- splatSimulatePaths(de.prob = 0, path.sigmaFac = 1, seed = 1)
 cpm(sim) <- edgeR::cpm(counts(sim))
 
 fData(sim) %>%
@@ -186,8 +187,9 @@ fData(sim) %>%
 Then we select one to plot.
 
 ```{r non-linear-plot}
-gene <- "Gene4655"
-gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$Step) %>%
+gene <- "Gene8810"
+gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ],
+                 Step = pData(sim)$Step) %>%
     ggplot(aes(x = Step, y = CPM)) +
     geom_point() +
     geom_smooth(se = FALSE) +
@@ -201,8 +203,8 @@ gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$S
     )
 
 gg
-ggsave("../additional/additional9_nonlinear.png", width = 8, height = 5)
-ggsave("../additional/additional9_nonlinear.pdf", width = 8, height = 5)
+ggsave("../additional/additional10_nonlinear.png", width = 8, height = 5)
+ggsave("../additional/additional10_nonlinear.pdf", width = 8, height = 5)
 ```
 
 Combined figures
@@ -213,7 +215,7 @@ single PDF.
 
 ```{r additional-figures-render, cache = FALSE, results = "hide"}
 render("additional_figures.Rmd", output_format = "pdf_document",
-       output_file = "additional_figures_1-11.pdf",
+       output_file = "additional_figures_1-15.pdf",
        output_dir = "../additional", envir = new.env())
 ```
 
@@ -221,12 +223,12 @@ Session information
 ===================
 
 The `sessionInfo.Rmd` file loads all the packages used for analysis and prints
-it out. We are going to render this document as a PDF to be included as an
+them out. We are going to render this document as a PDF to be included as an
 additional file.
 
 ```{r sessionInfo-render, cache = FALSE, results = "hide"}
 render("sessionInfo.Rmd", output_format = "pdf_document",
-       output_file = "additional13_sessionInfo.pdf",
+       output_file = "additional17_sessionInfo.pdf",
        output_dir = "../additional", envir = new.env())
 ```
 

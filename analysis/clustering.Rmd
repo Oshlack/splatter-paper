@@ -75,8 +75,8 @@ datasets <- read_tsv(file.path(root, "datasets.txt"),
 real <- loadDataset(datasets[3, ], root)
 
 set.seed(1)
-real <- real[rowSums(real) > 0, ]
 real <- real[, sample(1:ncol(real), 200)]
+real <- real[rowSums(real) > 0, ]
 ```
 
 ```{r estimate}
@@ -99,7 +99,8 @@ bp <- BiocParallel::MulticoreParam(10)
 sims <- bplapply(1:20, function(seed) {
     message("Simulating ", seed)
     sim <- splatSimulateGroups(params,
-                               groupCells      = c(200, 100, 50),
+                               batchCells      = 400,
+                               group.prob      = c(0.60, 0.25, 0.15),
                                de.prob         = 0.1,
                                de.facLoc       = -0.1,
                                de.facScale     = 0.3,
