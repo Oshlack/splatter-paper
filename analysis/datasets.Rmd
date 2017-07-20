@@ -227,11 +227,9 @@ for (idx in seq_along(res)) {
     message(paste("Making", name, "overall panel..."))
     comp <- res[[name]]
     plt <- makeOverallPanel(comp$Comp, comp$Diff, title = name)
-    plt.name <- paste0("additional", idx + 3, "_", name, "_overall")
+    plt.name <- paste0("additional", idx + 5, "_", name, "_overall")
     save_plot(paste0("../additional/", plt.name, ".png"), plt,
               ncol = 4, nrow = 7, base_height = 3)
-    #save_plot(paste0("../additional/", plt.name, ".pdf"), plt,
-    #          ncol = 4, nrow = 7, base_height = 3)
 }
 ```
 
@@ -340,6 +338,7 @@ panel <- ggdraw() +
 
 save_plot("../figures/figure2_tung_comparison.png", panel, ncol = 2, nrow = 4)
 save_plot("../figures/figure2_tung_comparison.pdf", panel, ncol = 2, nrow = 4)
+
 panel
 ```
 
@@ -410,6 +409,7 @@ panel <- ggdraw() +
 
 save_plot("../figures/figure3_tung_zeros.png", panel, ncol = 2, nrow = 3)
 save_plot("../figures/figure3_tung_zeros.pdf", panel, ncol = 2, nrow = 3)
+
 panel
 ```
 
@@ -472,9 +472,9 @@ summary %>%
           legend.key.size = unit(25, "points"),
           legend.position = "right")
 
-ggsave("../figures/figure4_mads_heatmap.pdf",
+ggsave("../figures/figure4_ranks_heatmap.pdf",
        width = 20, height = 25, units = "cm")
-ggsave("../figures/figure4_mads_heatmap.png",
+ggsave("../figures/figure4_ranks_heatmap.png",
        width = 20, height = 25, units = "cm")
 ```
 
@@ -510,12 +510,17 @@ summary %>%
           legend.text = element_text(size = 12),
           legend.key.size = unit(25, "points"),
           legend.position = "right")
+
+ggsave("../additional/additional12_mads_heatmap.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../additional/additional12_mads_heatmap.png",
+       width = 20, height = 25, units = "cm")
 ```
 
 We also produce a supplementary table of the MADs as a CSV.
 
 ```{r write-summary, eval = FALSE}
-write_csv(summary, "../additional/additional16_mads.csv")
+write_csv(summary, "../additional/additional2_mads.csv")
 ```
 
 Gene goodness-of-fit
@@ -564,9 +569,9 @@ gofs %>%
           strip.text = element_text(size = 20),
           legend.position = "bottom")
 
-ggsave("../additional/additional9_gene_gof.pdf",
+ggsave("../additional/additional14_gene_gof.pdf",
        width = 20, height = 25, units = "cm")
-ggsave("../additional/additional9_gene_gof.png",
+ggsave("../additional/additional14_gene_gof.png",
        width = 20, height = 25, units = "cm")
 ```
 
@@ -587,9 +592,7 @@ timings <- bind_rows(timings)
 
 ```{r plot-timings}
 timings %>%
-    mutate(Model = factor(Model, levels = c("Splat", "SplatDrop", "Simple",
-                                            "Lun", "Lun2", "Lun2ZINB", "scDD",
-                                            "BASiCS"))) %>%
+    mutate(Model = factor(Model, levels = names(labels))) %>%
     filter(!(Model == "SplatDrop" & Type == "Estimation")) %>%
     filter(!(Model == "Lun2ZINB" & Type == "Estimation")) %>%
     ggplot(aes(x = Model, y = Time, colour = Dataset)) +
@@ -608,9 +611,9 @@ timings %>%
           strip.text = element_text(size = 20),
           legend.position = "bottom")
 
-ggsave("../additional/additional15_timings.pdf",
+ggsave("../additional/additional11_timings.pdf",
        width = 20, height = 25, units = "cm")
-ggsave("../additional/additional15_timings.png",
+ggsave("../additional/additional11_timings.png",
        width = 20, height = 25, units = "cm")
 ```
 
@@ -629,6 +632,9 @@ comp.tung <- compareSCESets(sims.tung$Sims, point.size = 0.3)
 diff.tung <- diffSCESets(sims.tung$Sims, ref = "Real", point.size = 0.3)
 plt.tung <- makeOverallPanel(comp.tung, diff.tung, title = "Tung (filtered)")
 plt.tung
+
+save_plot("../additional/additional13_filtered.png", plt.tung,
+          ncol = 4, nrow = 7, base_height = 3)
 ```
 
 Session info
