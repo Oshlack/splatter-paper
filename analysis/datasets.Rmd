@@ -429,7 +429,7 @@ summary <- list()
 
 for (name in names(res)) {
     diff <- res[[name]]$Diff
-    summ <- summariseDiff(diff)$Long
+    summ <- summariseDiff(diff)
     colnames(summ)[1] <- "Simulation"
     summ <- data.frame(Dataset = name, summ)
     summary[[name]] <- summ
@@ -446,8 +446,8 @@ summary %>%
                               levels = rev(c("Mean", "Variance", "MeanVar",
                                          "LibSize", "ZerosCell", "ZerosGene",
                                          "MeanZeros")))) %>%
-    mutate(Rank = factor(Rank)) %>%
-    ggplot(aes(x = Simulation, y = Statistic, fill = Rank, label = MAD)) +
+    mutate(Rank = factor(MADRank)) %>%
+    ggplot(aes(x = Simulation, y = Statistic, fill = Rank)) +
     geom_tile() +
     viridis::scale_fill_viridis(direction = -1, discrete = TRUE) +
     scale_x_discrete(labels = labels[-1]) +
@@ -476,6 +476,40 @@ ggsave("../figures/figure4_mads_heatmap.pdf",
        width = 20, height = 25, units = "cm")
 ggsave("../figures/figure4_mads_heatmap.png",
        width = 20, height = 25, units = "cm")
+```
+
+We can also plot the (scaled) magnitude of the MADs for an additional figure.
+
+```{r summary-heatmap-magnitude}
+summary %>%
+    mutate(Statistic = factor(Statistic,
+                              levels = rev(c("Mean", "Variance", "MeanVar",
+                                         "LibSize", "ZerosCell", "ZerosGene",
+                                         "MeanZeros")))) %>%
+    ggplot(aes(x = Simulation, y = Statistic, fill = MADScaled)) +
+    geom_tile() +
+    viridis::scale_fill_viridis(direction = -1, discrete = FALSE,
+                                name = "Scaled\nMAD") +
+    scale_x_discrete(labels = labels[-1]) +
+    scale_y_discrete(labels = c("Mean" = "Mean", "Variance" = "Variance",
+                                "MeanVar" = "Mean-Variance",
+                                "LibSize" = "Library Size",
+                                "ZerosCell" = "% Zeros (Cell)",
+                                "ZerosGene" = "% Zeros (Gene)",
+                                "MeanZeros" = "Mean-Zeros")) +
+    ggtitle("Scaled MAD from real data") +
+    facet_grid(Dataset ~ .) +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.title = element_blank(),
+          axis.text = element_text(size = 12),
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          panel.grid = element_blank(),
+          strip.text = element_text(size = 16, face = "bold"),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points"),
+          legend.position = "right")
 ```
 
 We also produce a supplementary table of the MADs as a CSV.
@@ -559,17 +593,17 @@ timings %>%
     filter(!(Model == "SplatDrop" & Type == "Estimation")) %>%
     filter(!(Model == "Lun2ZINB" & Type == "Estimation")) %>%
     ggplot(aes(x = Model, y = Time, colour = Dataset)) +
-    #geom_bar(stat = "identity", width = 0.4, 
-    #         position = position_dodge(width = 0.5)) +
     geom_jitter(size = 3, width = 0.2, height = 0) +
     scale_x_discrete(labels = labels[-1]) +
     scale_colour_brewer(palette = "Dark2") +
-    scale_y_log10(labels = scales::comma) +
+    scale_y_log10(labels = c("1 sec", "1 min", "1 hour", "1 day"),
+                  breaks = c(1, 60, 60 * 60, 24 * 60 * 60)) +
     facet_wrap(~ Type, nrow = 2, scale = "free") +
     ggtitle("Processing times (datasets)") +
-    ylab("Time (seconds)") +
+    ylab("Processing time") + 
     theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
           axis.title.x = element_blank(),
+          panel.grid.major.y = element_line(size = 0.1, colour = "grey"),
           strip.background = element_rect(fill = "white"),
           strip.text = element_text(size = 20),
           legend.position = "bottom")
@@ -594,6 +628,7 @@ sims.tung <- simData(counts.tung, verbose = TRUE, bp = bp)
 comp.tung <- compareSCESets(sims.tung$Sims, point.size = 0.3)
 diff.tung <- diffSCESets(sims.tung$Sims, ref = "Real", point.size = 0.3)
 plt.tung <- makeOverallPanel(comp.tung, diff.tung, title = "Tung (filtered)")
+plt.tung
 ```
 
 Session info

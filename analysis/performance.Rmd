@@ -121,9 +121,7 @@ labels = c("Real" = "Real", "Splat" = "Splat", "SplatDrop" = "Splat (Drop)",
            "Lun2ZINB" = "Lun 2 (ZINB)", "scDD" = "scDD", "BASiCS" = "BASiCS")
 
 timings %>%
-    mutate(Model = factor(Model, levels = c("Splat", "SplatDrop", "Simple",
-                                            "Lun", "Lun2", "Lun2ZINB", "scDD",
-                                            "BASiCS"))) %>%
+    mutate(Model = factor(Model, levels = names(labels))) %>%
     gather(key = "Type", value = "Time", -Model, -nGenes) %>%
     filter(!(Model == "SplatDrop" & Type == "Estimation")) %>%
     filter(!(Model == "Lun2ZINB" & Type == "Estimation")) %>%
@@ -131,12 +129,14 @@ timings %>%
     geom_line() +
     geom_point() +
     scale_colour_manual(values = cols[-1], labels = labels[-1]) +
-    scale_y_log10(labels = scales::comma) +
+    scale_y_log10(labels = c("1 sec", "1 min", "1 hour", "1 day"),
+                  breaks = c(1, 60, 60 * 60, 24 * 60 * 60)) +
     facet_wrap(~ Type, nrow = 2, scales = "free") +
     ggtitle("Processing times (genes)") +
     xlab("Number of genes") +
-    ylab("Time (seconds)") +
+    ylab("Processing time") +
     theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          panel.grid.major.y = element_line(size = 0.1, colour = "grey"),
           strip.background = element_rect(fill = "white"),
           strip.text = element_text(size = 20),
           legend.position = "bottom")
@@ -179,9 +179,7 @@ timings <- bind_rows(res)
 
 ```{r plot-cells}
 timings %>%
-    mutate(Model = factor(Model, levels = c("Splat", "SplatDrop", "Simple",
-                                            "Lun", "Lun2", "Lun2ZINB", "scDD",
-                                            "BASiCS"))) %>%
+    mutate(Model = factor(Model, levels = names(labels))) %>%
     gather(key = "Type", value = "Time", -Model, -nCells) %>%
     filter(!(Model == "SplatDrop" & Type == "Estimation")) %>%
     filter(!(Model == "Lun2ZINB" & Type == "Estimation")) %>%
@@ -189,12 +187,14 @@ timings %>%
     geom_line() +
     geom_point() +
     scale_colour_manual(values = cols[-1], labels = labels[-1]) +
-    scale_y_log10(labels = scales::comma) +
+    scale_y_log10(labels = c("1 sec", "1 min", "1 hour", "1 day"),
+                  breaks = c(1, 60, 60 * 60, 24 * 60 * 60)) +
     facet_wrap(~ Type, nrow = 2, scales = "free") +
     ggtitle("Processing times (cells)") +
     xlab("Number of cells") +
-    ylab("Time (seconds)") +
+    ylab("Processing time") +
     theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          panel.grid.major.y = element_line(size = 0.1, colour = "grey"),
           strip.background = element_rect(fill = "white"),
           strip.text = element_text(size = 20),
           legend.position = "bottom")
