@@ -158,26 +158,6 @@ write_rds(sim.BASiCS, path = paste0("../output/sim_BASiCS.Rds"),
               compress = "gz")
 ```
 
-```{r sim-old, eval = FALSE}
-for (idx in seq_len(nrow(datasets))) {
-    set.seed(1)
-    dataset <- datasets[idx, ]
-    message("#### STARTING ", dataset["Dataset"], " ####")
-    name <- unlist(dataset["Dataset"])
-    comp <- simComp(counts, bp = bp)
-    res[[name]] <- comp
-    message("Writing comparison...")
-    write_rds(comp, path = paste0("../output/res_", name, ".Rds"),
-              compress = "gz")
-    message("All done!")
-}
-
-for (name in names(sims)) {
-    sims[[name]]$BASiCS <- sim.BASiCS[[name]]$Sim
-    times[[name]] <- rbind(times[[name]], BASiCS = sim.BASiCS[[name]]$Timings)
-}
-```
-
 ```{r add-BASiCS, cache.lazy = FALSE}
 names(sim.BASiCS) <- names(counts)
 
@@ -620,7 +600,7 @@ ggsave("../additional/additional11_timings.png",
 Tung (filtered)
 ===============
 
-```{r tung-filtered-sim}
+```{r tung-filtered-sim, results = "hide"}
 counts.tung <- counts$Tung
 counts.tung <- counts.tung[rowMeans(counts.tung == 0) < 0.75, ]
 
