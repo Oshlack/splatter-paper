@@ -1,7 +1,7 @@
 #' Test gene goodness-of-fit
 #'
-#' Test the goodness of fit for each gene with regards to the negative-binomial,
-#' log-normal and normal distributions.
+#' Test the goodness of fit for each gene with regards to the Poisson, negative
+#' binomial, log-normal and normal distributions.
 #'
 #' @param sce SCESet object
 #'

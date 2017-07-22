@@ -40,6 +40,7 @@ The code for completing the analysis shown in the paper is provided as the
 following Rmarkdown files in the analysis directory:
 
 * `simulations.Rmd` - Some examples of Splat simulations.
+* `performance.Rmd` - Processing time benchmarking.
 * `datasets.Rmd` - Comparison of simulations based on various datasets.
 * `clustering.Rmd` - Example evaluation of the SC3 clustering method.
 * `supplementary.Rmd` - Supplementary figures.
@@ -65,8 +66,11 @@ This directory contains the following functions used in the analysis:
   * `loadDataset` - Takes a row from `datasets.txt` and the path to the data
     files then returns an expression matrix for that dataset
 * `simulate_datasets.R`
-  * `simCompDataset` - Loads a dataset, estimates parameters for the various
-    simulations, simulates new datasets and returns a comparison
+  * `simData` - Takes a counts matrix, estimates parameters and simulates
+    data using various models
+* `test_genes.R`
+  * `testGenesGoF` - Test the goodness of fit for each gene with regards to
+    various distributions
 * `utils.R`
   * `chrRound` - Rounds a number for presentation, converting it to a string
   * `logistic` - Implementation of the logistic function
