@@ -143,20 +143,3 @@ simData <- function(counts, models = c("Splat", "SplatDrop", "Simple", "Lun",
     return(list(Sims = sims, Timings = timings))
 }
 
-#' @param compare Whether to produce a comparison of simulations
-#' @param test.gof Whether to test gene goodness-of-fit
-#if (test.gof) {
-#    message("***TESTING GENE GoF***")
-#    sims <- BiocParallel::bplapply(sims, testGenesGoF, BPPARAM = bp)
-#}
-#
-#if (compare) {
-#    message("***COMPARING DATASETS***")
-#    cols <- scales::hue_pal()(length(sims))
-#    comp <- splatter::compareSCESets(sims, point.size = 0.3, colours = cols)
-#    diff <- splatter::diffSCESets(sims, ref = "Real", point.size = 0.3,
-#                                  colours = cols[-1])
-#} else {
-#    comp = NA
-#    diff = NA
-#}
