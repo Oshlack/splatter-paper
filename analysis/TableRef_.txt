@@ -1,2 +1,0 @@
-"GeneNames" "GeneIndex"
-"G1352" 770
