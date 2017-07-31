@@ -1,3 +1,12 @@
+#' Load dataset
+#'
+#' Takes a vector describing a dataset and a path to data files and load the
+#' dataset
+#'
+#' @param dataset Vector describing a dataset
+#' @param root Root path where data is stored
+#'
+#' @return Gene by cell expression matrix
 loadDataset <- function(dataset, root) {
 
     #file <- file.path(root, dataset["Path"], dataset["CountsFile"])
@@ -92,5 +101,6 @@ loadDataset <- function(dataset, root) {
         stop("Dataset not valid")
     }
 
+    rownames(counts) <- paste0("G", seq_len(nrow(counts)))
     return(counts)
 }

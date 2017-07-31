@@ -1,0 +1,140 @@
+---
+title: "Additional figures"
+#date: '`r Sys.Date()`'
+output:
+  pdf_document: 
+    fig_caption: yes
+---
+
+<!--Code version: `r system("git log -1 --format=oneline | cut -d' ' -f1", intern = TRUE)`-->
+
+```{r knitr-opts, include = FALSE}
+DOCNAME = "combine"
+knitr::opts_chunk$set(autodep        = TRUE,
+                      cache          = FALSE,
+                      cache.path     = paste0("cache/", DOCNAME, "/"),
+                      cache.comments = TRUE,
+                      echo           = FALSE,
+                      error          = FALSE,
+                      fig.align      = "center",
+                      fig.path       = paste0("figures/", DOCNAME, "/"),
+                      fig.width      = 10,
+                      fig.height     = 8,
+                      dev            = c('svg', 'png'),
+                      message        = FALSE,
+                      warning        = FALSE)
+```
+
+```{r load-libraries, echo = FALSE}
+library("knitr")
+```
+
+```{r load-source, echo = FALSE}
+
+```
+
+# List of additional figures
+
+**Additional Figure 1** - Simple simulation model
+
+**Additional Figure 2** - Lun simulation model
+
+**Additional Figure 3** - Lun 2 simulation model
+
+**Additional Figure 4** - Benchmarking (genes)
+
+**Additional Figure 5** - Benchmarking (cells)
+
+**Additional Figure 6** - Camp dataset comparison
+
+**Additional Figure 7** - Klein dataset comparison
+
+**Additional Figure 8** - Tung dataset comparison
+
+**Additional Figure 9** - Zeisel dataset comparison
+
+**Additional Figure 10** - Engel dataset comparison
+
+**Additional Figure 11** - Dataset processing times
+
+**Additional Figure 12** - MADs heatmap
+
+**Additional Figure 13** - Filtered Tung dataset comparison
+
+**Additional Figure 14** - Gene goodness-of-fit
+
+**Additional Figure 15** - Example non-linear gene
+
+**Additional Figure 16** - Dispersion estimation
+
+**Additional Figure 17** - Mean-zeros relationship
+
+\newpage
+
+```{r additional1, fig.cap = "Diagram of the Simple simulation model. Input parameters are indicated with double borders, blue shading shows those that can be estimated from real data. Red shading indicates the final output.", echo = FALSE}
+include_graphics("../additional/additional1_simple_model.pdf")
+```
+
+```{r additional2, fig.cap = "Diagram of the core Lun simulation model. Input parameters are indicated with double borders, blue shading shows those that can be estimated from real data. Red shading indicates the final output.", echo = FALSE}
+include_graphics("../additional/additional2_lun_model.pdf")
+```
+
+```{r additional3, fig.cap = "Diagram of the Lun 2 simulation model. Input parameters are indicated with double borders, green shading shows those that can be estimated and sampled from real data. Red shading indicates the final output.", echo = FALSE}
+include_graphics("../additional/additional3_lun2_model.pdf")
+```
+
+```{r additional4, fig.cap = "Benchmarking of processing times with incresing numbers of genes. The number of genes in the input dataset is given on the x-axis and the processing time on the y-axis on a log scale. Each simulation is shown in a different colour with the top panel showing the estimation time and the bottom the simulation time. The Splat (Drop) and Lun 2 (ZINB) simulations are not shown in the estimation panel as the parameters for these are estimated at the same time as their regular variants.", echo = FALSE}
+include_graphics("../additional/additional4_benchmark_genes.pdf")
+```
+
+```{r additional5, fig.cap = "Benchmarking of processing times with incresing numbers of cells. This figure is the same as Additional figure 13 except that the x-axis shows an incresing number of cells rather than genes.", echo = FALSE}
+include_graphics("../additional/additional5_benchmark_cells.pdf")
+```
+
+```{r additional6, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Camp dataset.", echo = FALSE}
+include_graphics("../additional/additional6_Camp_overall.png")
+```
+
+```{r additional7, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Klein dataset.", echo = FALSE}
+include_graphics("../additional/additional7_Klein_overall.png")
+```
+
+```{r additional8, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Tung dataset.", echo = FALSE}
+include_graphics("../additional/additional8_Tung_overall.png")
+```
+
+```{r additional9, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Zeisel dataset.", echo = FALSE}
+include_graphics("../additional/additional9_Zeisel_overall.png")
+```
+
+```{r additional10, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Engel dataset.", echo = FALSE}
+include_graphics("../additional/additional10_Engel_overall.png")
+```
+
+```{r additional11, fig.cap = "Processing times for the different datasets. The various simulation models are shown on the x-axis and the times they took for estimation (top) and simulation (bottom) are given on the y-axis on a log scale. The scDD estimation, Lun 2 estimation and scDD simulation processes were run on 10 cores, all other processes were run on a single core.", echo = FALSE}
+include_graphics("../additional/additional11_timings.pdf")
+```
+
+```{r additional12, fig.cap = "Heatmap of MADs for each simulation and dataset. As the different properties have different scales each row has been scaled by subtracting by the mean and dividing by the standard deviation.", echo = FALSE}
+include_graphics("../additional/additional12_mads_heatmap.png")
+```
+
+```{r additional13, fig.cap = "Output of Splatter’s comparison functions for simulations based on the Tung dataset after removing all genes with greater than 75 percent zeros.", echo = FALSE}
+include_graphics("../additional/additional13_filtered.png")
+```
+
+```{r additional14, fig.cap = "Barplots of gene goodness-of-fit for each dataset. Parameters for the Poisson, negative binomial, log-normal and normal distributions were fit to each gene. A chi-squared goodness-of-fit test was then used to see if the counts for that gene could be expected to come from the fitted distributions. The height of the bars show the number of genes for which a given distribution was not rejected (p > 0.01), as well as the number of genes for which fitting failed for all distributions.", echo = FALSE}
+include_graphics("../additional/additional14_gene_gof.png")
+```
+
+```{r additional15, fig.cap = "Example of a simulated gene that changes expression in a non-linear way over the course of a path. Each point is a cell with the x-axis showing progression along the path and the y-axis the simulated expression level. The blue line shows a LOESS fit.", echo = FALSE}
+include_graphics("../additional/additional15_nonlinear.pdf")
+```
+
+```{r additional16, fig.cap = "Correction of edgeR dispersion estimates. Scatter plot of estimated dispersions against the true simulated values. Estimates of common dispersion obtained from edgeR (green) can be inflated for single-cell data. The Splat simulation uses a linearly corrected value (orange) in its estimation procedure. The red line shows the true values.", echo = FALSE}
+include_graphics("../additional/additional16_disps.pdf")
+```
+
+```{r additional17, fig.cap = "Fitting the mean-zeros relationship. Points show genes in the Tung dataset and the red line is a logistic function fitted to the data using Splat’s estimation procedure.", echo = FALSE}
+include_graphics("../additional/additional17_meanzeros.pdf")
+```

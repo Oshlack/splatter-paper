@@ -24,13 +24,16 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       warning        = FALSE)
 ```
 
-```{r libraries}
+```{r libraries, cache = FALSE}
 # RNA-seq
 library("scater")
 library("splatter")
 
 # Plotting
 library("cowplot")
+
+# Documents
+library("rmarkdown")
 
 # Tidyverse
 library("tidyverse")
@@ -112,7 +115,8 @@ gg <- ggplot(df, aes(x = x, y = y)) +
     )
 
 gg
-ggsave("../output/mean-zeros.png", width = 8, height = 5)
+ggsave("../additional/additional17_meanzeros.png", width = 8, height = 5)
+ggsave("../additional/additional17_meanzeros.pdf", width = 8, height = 5)
 ```
 
 Dispersion estimation
@@ -159,7 +163,8 @@ gg <- disps %>%
     )
 
 gg
-ggsave("../output/disp_estimates.png", width = 8, height = 5)
+ggsave("../additional/additional16_disps.png", width = 8, height = 5)
+ggsave("../additional/additional16_disps.pdf", width = 8, height = 5)
 ```
 
 Non-linear genes
@@ -170,7 +175,8 @@ non-linear changes in expression over the course of a differentiation
 trajectory. We simulate a path and then filter out some of the non-linear genes.
 
 ```{r non-linear}
-sim <- splatSimulatePaths(de.facLoc = 0.1, de.facScale = 0.4, seed = 1)
+set.seed(1)
+sim <- splatSimulatePaths(de.prob = 0, path.sigmaFac = 1, seed = 1)
 cpm(sim) <- edgeR::cpm(counts(sim))
 
 fData(sim) %>%
@@ -181,8 +187,9 @@ fData(sim) %>%
 Then we select one to plot.
 
 ```{r non-linear-plot}
-gene <- "Gene4655"
-gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$Step) %>%
+gene <- "Gene8810"
+gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ],
+                 Step = pData(sim)$Step) %>%
     ggplot(aes(x = Step, y = CPM)) +
     geom_point() +
     geom_smooth(se = FALSE) +
@@ -196,7 +203,33 @@ gg <- data.frame(CPM = assayData(sim)$BaseCellMeans[gene, ], Step = pData(sim)$S
     )
 
 gg
-ggsave("../output/nonlinear_gene.png", width = 8, height = 5)
+ggsave("../additional/additional15_nonlinear.png", width = 8, height = 5)
+ggsave("../additional/additional15_nonlinear.pdf", width = 8, height = 5)
+```
+
+Combined figures
+================
+
+The `additional_figures.Rmd` file combines all the additional figures into a
+single PDF.
+
+```{r additional-figures-render, cache = FALSE, results = "hide"}
+render("additional_figures.Rmd", output_format = "pdf_document",
+       output_file = "additional_figures_1-17.pdf",
+       output_dir = "../additional", envir = new.env())
+```
+
+Session information
+===================
+
+The `sessionInfo.Rmd` file loads all the packages used for analysis and prints
+them out. We are going to render this document as a PDF to be included as an
+additional file.
+
+```{r sessionInfo-render, cache = FALSE, results = "hide"}
+render("sessionInfo.Rmd", output_format = "pdf_document",
+       output_file = "additional3_sessionInfo.pdf",
+       output_dir = "../additional", envir = new.env())
 ```
 
 Session info

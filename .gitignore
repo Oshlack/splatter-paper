@@ -8,6 +8,9 @@ analysis/cache
 analysis/figures
 analysis/docs
 analysis/*.html
+analysis/*_cache
+analysis/*_figures
+analysis/*.pdf
 
 # Data directory
 data

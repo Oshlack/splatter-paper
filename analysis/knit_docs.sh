@@ -12,7 +12,7 @@
 module load R
 module load pandoc
 
-cd /group/bioi1/luke/analysis/Simplifying-simulation-of-single-cell-RNA-sequencing-with-Splatter/analysis
+cd /group/bioi1/luke/analysis/splatter-paper/analysis
 
 Rscript -e "library(rmarkdown)" \
     -e "rmarkdown::render('simulations.Rmd', 'html_document')" \

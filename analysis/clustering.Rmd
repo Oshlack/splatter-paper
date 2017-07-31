@@ -75,8 +75,8 @@ datasets <- read_tsv(file.path(root, "datasets.txt"),
 real <- loadDataset(datasets[3, ], root)
 
 set.seed(1)
-real <- real[rowSums(real) > 0, ]
 real <- real[, sample(1:ncol(real), 200)]
+real <- real[rowSums(real) > 0, ]
 ```
 
 ```{r estimate}
@@ -93,13 +93,14 @@ We can now generate 20 synthetic datasets based on these parameters using the
 `Splat` simulation. Each simulation has three groups of cells with 200, 100 or
 50 cells in each group.
 
-```{r simulate}
+```{r simulate, cache.lazy = FALSE}
 bp <- BiocParallel::MulticoreParam(10)
 
 sims <- bplapply(1:20, function(seed) {
     message("Simulating ", seed)
     sim <- splatSimulateGroups(params,
-                               groupCells      = c(200, 100, 50),
+                               batchCells      = 400,
+                               group.prob      = c(0.60, 0.25, 0.15),
                                de.prob         = 0.1,
                                de.facLoc       = -0.1,
                                de.facScale     = 0.3,
@@ -116,7 +117,7 @@ SC3
 Now that we have the datasets we want to cluster them using SC3. We know we
 have simulated three groups so we use this as the value of $k$ when clustering.
 
-```{r sc3}
+```{r sc3, cache.lazy = FALSE}
 sc3s <- lapply(1:length(sims), function(i) {
     message("Running SC3 ", i)
     sim <- sims[[i]]
@@ -187,12 +188,14 @@ metrics <- sapply(1:length(sc3s), function(run) {
         mutate(DE_Precision = DE_TP / (DE_TP + DE_FP)) %>%
         mutate(DE_F1 = 2 * ((DE_Precision * DE_Recall) /
                                 (DE_Precision + DE_Recall))) %>%
+        mutate(DE_FPR = DE_FP / (DE_FP + DE_TN)) %>%
         # Calculate marker summary statistics
         mutate(Mk_Accuracy = (Mk_TP + Mk_TN) / nrow(sc3)) %>%
         mutate(Mk_Recall = Mk_TP / Mk_True) %>%
         mutate(Mk_Precision = Mk_TP / (Mk_TP + Mk_FP)) %>%
         mutate(Mk_F1 = 2 * ((Mk_Precision * Mk_Recall) /
                                 (Mk_Precision + Mk_Recall))) %>%
+        mutate(Mk_FPR = Mk_FP / (Mk_FP + Mk_TN)) %>%
         # Convert to vector
         unlist() 
     
@@ -220,14 +223,14 @@ p1 <- metrics %>%
     gather("Metric", "Value", 2:6) %>%
     mutate(Metric = factor(Metric, c("Rand", "HA", "MA", "FM", "Jaccard"))) %>%
     ggplot(aes(x = Metric, y = Value)) +
-    geom_boxplot(colour = "#66C2A5", fill = "#66C2A5", size = 2,
+    geom_boxplot(colour = "#66C2A5", fill = "#66C2A5", size = 1,
                  outlier.size = 3, alpha = 0.4) +
     ylim(c(0, 1)) +
     ggtitle("Clustering indices") +
     xlab("Index") +
     theme_cowplot() +
     theme(plot.title = element_text(size = 18, hjust = 0.4),
-          axis.text = element_text(size = 12),
+          axis.text = element_text(size = 10),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
           legend.key.size = unit(25, "points")
@@ -248,17 +251,17 @@ a series of metrics commonly used in that field.
 ```{r de-plot}
 metrics %>%
     select(Run, Accuracy = DE_Accuracy, Recall = DE_Recall,
-           Precision = DE_Precision, F1 = DE_F1) %>%
-    gather("Metric", "Value", 2:5) %>%
+           Precision = DE_Precision, F1 = DE_F1, FPR = DE_FPR) %>%
+    gather("Metric", "Value", -Run) %>%
     mutate(Metric = factor(Metric, c("Accuracy", "Recall", "Precision",
-                                     "F1"))) %>%
+                                     "F1", "FPR"))) %>%
     ggplot(aes(x = Metric, y = Value)) +
-    geom_boxplot(colour = "#FC8D62", fill = "#FC8D62", size = 2,
+    geom_boxplot(colour = "#FC8D62", fill = "#FC8D62", size = 1,
                  outlier.size = 3, alpha = 0.4) +
     ggtitle("Differential expression metrics") +
     theme_cowplot() +
     theme(plot.title = element_text(size = 20, hjust = 0.4),
-          axis.text = element_text(size = 12),
+          axis.text = element_text(size = 10),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
           legend.key.size = unit(25, "points")
@@ -276,17 +279,17 @@ What about the marker genes? We treat this in the same way as the DE genes.
 ```{r marker-plot}
 metrics %>%
     select(Run, Accuracy = Mk_Accuracy, Recall = Mk_Recall,
-           Precision = Mk_Precision, F1 = Mk_F1) %>%
-    gather("Metric", "Value", 2:5) %>%
+           Precision = Mk_Precision, F1 = Mk_F1, FPR = Mk_FPR) %>%
+    gather("Metric", "Value", -Run) %>%
     mutate(Metric = factor(Metric, c("Accuracy", "Recall", "Precision",
-                                     "F1"))) %>%
+                                     "F1", "FPR"))) %>%
     ggplot(aes(x = Metric, y = Value)) +
     geom_boxplot(colour = "#8DA0CB", fill = "#8DA0CB", size = 1,
                  outlier.size = 2, alpha = 0.4) +
     ggtitle("Marker gene metrics") +
     theme_cowplot() +
     theme(plot.title = element_text(size = 20, hjust = 0.4),
-          axis.text = element_text(size = 12),
+          axis.text = element_text(size = 10),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
           legend.key.size = unit(25, "points")
@@ -303,17 +306,17 @@ Let's have a look at the results for the two kinds of genes side-by-side.
 ```{r genes-plot}
 p2 <- metrics %>%
     select(Run, Accuracy = DE_Accuracy, Recall = DE_Recall,
-           Precision = DE_Precision, F1 = DE_F1) %>%
-    gather("Metric", "Value", 2:5) %>%
+           Precision = DE_Precision, F1 = DE_F1, FPR = DE_FPR) %>%
+    gather("Metric", "Value", -Run) %>%
     mutate(Metric = factor(Metric, c("Accuracy", "Recall", "Precision",
-                                     "F1"))) %>%
+                                     "F1", "FPR"))) %>%
     mutate(Type = "DE") %>%
     bind_rows(metrics %>%
                   select(Run, Accuracy = Mk_Accuracy, Recall = Mk_Recall,
-                         Precision = Mk_Precision, F1 = Mk_F1) %>%
-                  gather("Metric", "Value", 2:5) %>%
+                         Precision = Mk_Precision, F1 = Mk_F1, FPR = Mk_FPR) %>%
+                  gather("Metric", "Value", -Run) %>%
                   mutate(Metric = factor(Metric, c("Accuracy", "Recall",
-                                                   "Precision", "F1"))) %>%
+                                                   "Precision", "F1", "FPR"))) %>%
                   mutate(Type = "Marker")) %>%
     ggplot(aes(x = Metric, y = Value, colour = Type, fill = Type)) +
     geom_boxplot(size = 1, outlier.size = 2, alpha = 0.4) +
@@ -322,7 +325,7 @@ p2 <- metrics %>%
     ggtitle("Gene identification") +
     theme_cowplot() +
     theme(plot.title = element_text(size = 18, hjust = 0.4),
-          axis.text = element_text(size = 12),
+          axis.text = element_text(size = 10),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
           legend.key.size = unit(25, "points")
@@ -341,7 +344,8 @@ For the paper we want a single panel combining the clustering the gene results.
 panel <- plot_grid(p1, p2, align = "h", ncol = 2, labels = "AUTO",
                    rel_widths = c(0.8, 1))
 panel
-save_plot("../output/sc3_results.pdf", panel, ncol = 2)
+save_plot("../figures/figure6_sc3_results.pdf", panel, ncol = 2)
+save_plot("../figures/figure6_sc3_results.png", panel, ncol = 2)
 ```
 
 Session info

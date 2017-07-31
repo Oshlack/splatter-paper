@@ -19,7 +19,7 @@ knitr::opts_chunk$set(autodep        = TRUE,
                       fig.path       = paste0("figures/", DOCNAME, "/"),
                       fig.width      = 10,
                       fig.height     = 8,
-                      dev            = c('svg', 'png'),
+                      dev            = c('png'),
                       message        = FALSE,
                       warning        = FALSE)
 ```
@@ -45,6 +45,7 @@ library("tidyverse")
 ```{r source, cache = FALSE}
 source("../R/load_datasets.R")
 source("../R/simulate_datasets.R")
+source("../R/test_genes.R")
 source("../R/utils.R")
 ```
 
@@ -94,24 +95,121 @@ The next step is to load in the datasets, estimate parameters from them,
 simulate using the various models in Splatter and compare the results. Here we
 do that for each dataset. We also produce an overall comparison panel.
 
-```{r simulate, cache.lazy = FALSE}
+```{r counts}
 bp <- BiocParallel::MulticoreParam(10)
 
-res <- list()
-
-for (idx in seq_len(nrow(datasets))) {
+counts <- bplapply(seq_len(nrow(datasets)), function(idx){
+    set.seed(1)
     dataset <- datasets[idx, ]
     name <- unlist(dataset["Dataset"])
-    comp <- simCompDataset(dataset, root, bp = bp)
-    res[[name]] <- comp
-    message("Writing comparison...")
-    write_rds(comp, path = paste0("../output/res_", name, ".Rds"),
+    message("***LOADING ", name, "***")
+    counts <- loadDataset(dataset, root)
+    na.rows <- which(rowSums(is.na(counts)) > 0)
+    if (length(na.rows) > 0) {
+        counts <- counts[-na.rows, ]
+    }
+    counts <- counts[, sample(1:ncol(counts), 200)]
+    counts <- counts[rowSums(counts) > 0, ]
+}, BPPARAM = bp)
+names(counts) <- datasets$Dataset
+```
+
+```{r simulate, cache.lazy = FALSE}
+sims <- list()
+times <- list()
+
+for (name in names(counts)) {
+    set.seed(1)
+    counts.dataset <- counts[[name]]
+    message("#### ", Sys.time(), " STARTING ", name, " ####")
+    sim.dataset <- simData(counts.dataset,
+                           models = c("Splat", "SplatDrop", "Simple", "Lun",
+                                       "Lun2", "Lun2ZINB", "scDD"),
+                           verbose = TRUE, bp = bp)
+    sims[[name]] <- sim.dataset$Sims
+    times[[name]] <- sim.dataset$Timings
+    message("Writing simulations...")
+    write_rds(sim.dataset, path = paste0("../output/sim_", name, ".Rds"),
               compress = "gz")
-    message("Making overall panel...")
+    message("#### ", Sys.time(), " FINISHED ", name, " ####")
+}
+```
+
+```{r simulate-BASiCS}
+sim.BASiCS <- bplapply(names(counts), function(name) {
+    set.seed(1)
+    message("#### ", Sys.time(), " STARTING ", name, " ####")
+    counts.dataset <- round(counts[[name]])
+    time.est <- system.time(
+        params <- BASiCSEstimate(counts.dataset,
+                                 batch = sample(1:2, ncol(counts.dataset),
+                                                replace = TRUE),
+                                 verbose = FALSE, progress = FALSE)
+    )[3]
+    time.sim <- system.time(
+            sim <- BASiCSSimulate(params, seed = 1, verbose = FALSE)
+    )[3]
+    message(name, " done!")
+    message("#### ", Sys.time(), " FINISHED ", name, " ####")
+    list(Sim = sim, Timings = c(Estimation = time.est, Simulation = time.sim))
+}, BPPARAM = bp)
+
+write_rds(sim.BASiCS, path = paste0("../output/sim_BASiCS.Rds"),
+              compress = "gz")
+```
+
+```{r add-BASiCS, cache.lazy = FALSE}
+names(sim.BASiCS) <- names(counts)
+
+sims <- lapply(names(sims), function(name) {
+    sims.dataset <- sims[[name]]
+    sims.dataset$BASiCS <- sim.BASiCS[[name]]$Sim
+    return(sims.dataset)
+})
+names(sims) <- names(counts)
+
+times <- lapply(names(times), function(name) {
+    times.dataset <- times[[name]]
+    times.dataset <- rbind(times.dataset, BASiCS = sim.BASiCS[[name]]$Timings)
+    return(times.dataset)
+})
+names(times) <- names(counts)
+```
+
+```{r test-gene-gof, cache.lazy = FALSE}
+sims <- lapply(names(sims), function(name) {
+    message("#### ", Sys.time(), " STARTING ", name, " ####")
+    sims.dataset <- sims[[name]]
+    sims.dataset <- bplapply(sims.dataset, testGenesGoF, BPPARAM = bp)
+    message("#### ", Sys.time(), " FINISHED ", name, " ####")
+    return(sims.dataset)
+})
+
+names(sims) <- names(counts)
+```
+
+```{r compare-sims, cache.lazy = FALSE}
+res <- bplapply(names(sims), function(name) {
+    sims.dataset <- sims[[name]]
+    comp <- compareSCESets(sims.dataset, point.size = 0.3)
+    diff <- diffSCESets(sims.dataset, ref = "Real", point.size = 0.3)
+    list(Comp = comp, Diff = diff)
+}, BPPARAM = bp)
+
+names(res) <- names(sims)
+
+write_rds(res, path = "../output/res_all.Rds", compress = "gz")
+```
+
+```{r make-overall}
+for (idx in seq_along(res)) {
+    name <- names(res)[idx]
+    message(paste("Making", name, "overall panel..."))
+    comp <- res[[name]]
     plt <- makeOverallPanel(comp$Comp, comp$Diff, title = name)
-    save_plot(paste0("../output/overall_", name, ".png"), plt,
-              ncol = 4, nrow = 7)
-    message("All done!")
+    plt.name <- paste0("additional", idx + 5, "_", name, "_overall")
+    save_plot(paste0("../additional/", plt.name, ".png"), plt,
+              ncol = 4, nrow = 7, base_height = 3)
 }
 ```
 
@@ -133,8 +231,13 @@ plots <- list(MeansComp   = res$Tung$Comp$Plots$Means,
               LibSizeComp = res$Tung$Comp$Plots$LibrarySizes,
               LibSizeDiff = res$Tung$Diff$Plots$LibrarySizes)
 
-# Select the colour we are going to use
-cols <- RColorBrewer::brewer.pal(8, "Dark2")
+# Select the colours we are going to use
+cols <- RColorBrewer::brewer.pal(9, "Set1")
+
+# Labels for datasets
+labels = c("Real" = "Real", "Splat" = "Splat", "SplatDrop" = "Splat (Drop)",
+           "Simple" = "Simple", "Lun" = "Lun", "Lun2" = "Lun 2",
+           "Lun2ZINB" = "Lun 2 (ZINB)", "scDD" = "scDD", "BASiCS" = "BASiCS")
 
 # Make adjustments to the plots
 for (idx in seq_along(plots)) {
@@ -148,20 +251,35 @@ for (idx in seq_along(plots)) {
     
     # Set the colours, diff plots have one less dataset
     if (grepl("Comp", name)) {
-        plot <- plot + scale_color_manual(values = cols) + 
-            scale_fill_manual(values = cols)
+        plot <- plot + scale_color_manual(values = cols, labels = labels) + 
+            scale_fill_manual(values = cols, labels = labels)
     } else {
-        plot <- plot + scale_color_manual(values = cols[-1]) + 
-            scale_fill_manual(values = cols[-1])
+        plot <- plot + scale_color_manual(values = cols[-1], labels = labels[-1]) + 
+            scale_fill_manual(values = cols[-1], labels = labels[-1])
     }
     
     # Boxplots are replotted with different properties, axis text adjusted and
     # x label removed
     if (!grepl("MeanVar", name)) {
         plot <- plot + geom_boxplot(aes(fill = Dataset),
-                                    size = 1.5, alpha = 0.2) + 
+                                    size = 1.5, alpha = 0.2) +
+            scale_x_discrete(labels = labels[-1]) +
             theme(axis.title.x = element_blank(),
                   axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+    }
+
+    # Set y-axis on some plots
+    if (name == "VarsComp") {
+        plot <- plot + coord_cartesian(ylim = c(0, 20))
+    }
+    if (name == "VarsDiff") {
+        plot <- plot + coord_cartesian(ylim = c(-10, 20))
+    }
+    if (name == "MeanVarComp") {
+        plot <- plot + coord_cartesian(ylim = c(0, 30))
+    }
+    if (name == "MeanVarDiff") {
+        plot <- plot + coord_cartesian(ylim = c(-10, 30))
     }
     
     plots[[idx]] <- plot
@@ -198,7 +316,9 @@ panel <- ggdraw() +
     draw_plot(plots$LibSizeDiff, 0.51, 0.05, 0.49, 0.23) +
     draw_plot(leg, 0.00, 0.00, 1.00, 0.04)
 
-save_plot("../output/tung_comparison.png", panel, ncol = 2, nrow = 4)
+save_plot("../figures/figure2_tung_comparison.png", panel, ncol = 2, nrow = 4)
+save_plot("../figures/figure2_tung_comparison.pdf", panel, ncol = 2, nrow = 4)
+
 panel
 ```
 
@@ -222,18 +342,19 @@ for (idx in seq_along(plots)) {
     
     # Set the colours, diff plots have one less dataset
     if (grepl("Comp", name)) {
-        plot <- plot + scale_color_manual(values = cols) + 
-            scale_fill_manual(values = cols)
+        plot <- plot + scale_color_manual(values = cols, labels = labels) + 
+            scale_fill_manual(values = cols, labels = labels)
     } else {
-        plot <- plot + scale_color_manual(values = cols[-1]) + 
-            scale_fill_manual(values = cols[-1])
+        plot <- plot + scale_color_manual(values = cols[-1], labels = labels[-1]) + 
+            scale_fill_manual(values = cols[-1], labels = labels[-1])
     }
     
     # Boxplots are replotted with different properties, axis text adjusted and
     # x label removed
     if (!grepl("MeanZeros", name)) {
         plot <- plot + geom_boxplot(aes(fill = Dataset),
-                                    size = 1.5, alpha = 0.2) + 
+                                    size = 1.5, alpha = 0.2) +
+            scale_x_discrete(labels = labels[-1]) +
             theme(axis.title.x = element_blank(),
                   axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
     }
@@ -266,7 +387,9 @@ panel <- ggdraw() +
     draw_plot(plots$MeanZerosDiff,  0.51, 0.05, 0.49, 0.31) +
     draw_plot(leg, 0.00, 0.00, 1.00, 0.04)
 
-save_plot("../output/tung_zeros.png", panel, ncol = 2, nrow = 3)
+save_plot("../figures/figure3_tung_zeros.png", panel, ncol = 2, nrow = 3)
+save_plot("../figures/figure3_tung_zeros.pdf", panel, ncol = 2, nrow = 3)
+
 panel
 ```
 
@@ -286,7 +409,7 @@ summary <- list()
 
 for (name in names(res)) {
     diff <- res[[name]]$Diff
-    summ <- summariseDiff(diff)$Long
+    summ <- summariseDiff(diff)
     colnames(summ)[1] <- "Simulation"
     summ <- data.frame(Dataset = name, summ)
     summary[[name]] <- summ
@@ -303,15 +426,11 @@ summary %>%
                               levels = rev(c("Mean", "Variance", "MeanVar",
                                          "LibSize", "ZerosCell", "ZerosGene",
                                          "MeanZeros")))) %>%
-    mutate(Rank = factor(Rank)) %>%
-    ggplot(aes(x = Simulation, y = Statistic, fill = Rank, label = MAD)) +
+    mutate(Rank = factor(MADRank)) %>%
+    ggplot(aes(x = Simulation, y = Statistic, fill = Rank)) +
     geom_tile() +
     viridis::scale_fill_viridis(direction = -1, discrete = TRUE) +
-    scale_x_discrete(labels = c("Splat" = "Splat",
-                                "SplatDrop" = "Splat (Dropout)",
-                                "Simple" = "Simple", "Lun" = "Lun",
-                                "Lun2" = "Lun2",
-                                "Lun2ZINB" = "Lun2 (ZINB)")) +
+    scale_x_discrete(labels = labels[-1]) +
     scale_y_discrete(labels = c("Mean" = "Mean", "Variance" = "Variance",
                                 "MeanVar" = "Mean-Variance",
                                 "LibSize" = "Library Size",
@@ -333,19 +452,169 @@ summary %>%
           legend.key.size = unit(25, "points"),
           legend.position = "right")
 
-ggsave("../output/datasets_heatmap.pdf", width = 20, height = 25, units = "cm")
+ggsave("../figures/figure4_ranks_heatmap.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../figures/figure4_ranks_heatmap.png",
+       width = 20, height = 25, units = "cm")
 ```
 
-We also produce a supplementary table of the MADs.
+We can also plot the (scaled) magnitude of the MADs for an additional figure.
 
-```{r}
+```{r summary-heatmap-magnitude}
 summary %>%
-    select(-Rank) %>%
-    mutate(MAD = chrRound(MAD, 2)) %>%
-    spread(key = Statistic, value = MAD) %>%
-    kable(format = "latex",
-          caption = "Median Absolute Deviations for all datasets") %>%
-    write_lines("../output/mads_table.tex")
+    mutate(Statistic = factor(Statistic,
+                              levels = rev(c("Mean", "Variance", "MeanVar",
+                                         "LibSize", "ZerosCell", "ZerosGene",
+                                         "MeanZeros")))) %>%
+    ggplot(aes(x = Simulation, y = Statistic, fill = MADScaled)) +
+    geom_tile() +
+    viridis::scale_fill_viridis(direction = -1, discrete = FALSE,
+                                name = "Scaled\nMAD") +
+    scale_x_discrete(labels = labels[-1]) +
+    scale_y_discrete(labels = c("Mean" = "Mean", "Variance" = "Variance",
+                                "MeanVar" = "Mean-Variance",
+                                "LibSize" = "Library Size",
+                                "ZerosCell" = "% Zeros (Cell)",
+                                "ZerosGene" = "% Zeros (Gene)",
+                                "MeanZeros" = "Mean-Zeros")) +
+    ggtitle("Scaled MAD from real data") +
+    facet_grid(Dataset ~ .) +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.title = element_blank(),
+          axis.text = element_text(size = 12),
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          panel.grid = element_blank(),
+          strip.text = element_text(size = 16, face = "bold"),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
+          legend.key.size = unit(25, "points"),
+          legend.position = "right")
+
+ggsave("../additional/additional12_mads_heatmap.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../additional/additional12_mads_heatmap.png",
+       width = 20, height = 25, units = "cm")
+```
+
+We also produce a supplementary table of the MADs as a CSV.
+
+```{r write-summary, eval = FALSE}
+write_csv(summary, "../additional/additional2_mads.csv")
+```
+
+Gene goodness-of-fit
+====================
+
+```{r get-gofs}
+gofs <- lapply(names(res), function(name) {
+    res[[name]]$Comp$FeatureData %>%
+        rowwise() %>%
+        mutate(IsNA = all(is.na(NBChi), is.na(LNChi), is.na(NormChi),
+                          is.na(PoiChi))) %>%
+        #filter(!IsNA) %>%
+        mutate(IsNB = NBPVal > 0.01, IsLN = LNPVal > 0.01,
+               IsNorm = NormPVal > 0.01, IsPoi = PoiPVal> 0.01) %>%
+        ungroup() %>%
+        group_by(Dataset) %>%
+        summarise(NotFit = sum(IsNA),
+                  NB = sum(IsNB, na.rm = TRUE),
+                  LNorm = sum(IsLN, na.rm = TRUE),
+                  Norm = sum(IsNorm, na.rm = TRUE),
+                  Poi = sum(IsPoi, na.rm = TRUE)) %>%
+        gather(key = Dist, value = Count, -Dataset) %>%
+        mutate(RealData = name)
+})
+
+gofs <- bind_rows(gofs)
+```
+
+```{r plot-goodness-of-fit}
+gofs %>%
+    mutate(Dist = factor(Dist, levels = c("Poi", "NB", "LNorm", "Norm",
+                                          "NotFit"))) %>%
+    ggplot(aes(x = Dataset, y = Count, fill = Dist)) +
+    geom_bar(stat = "identity", width = 0.4, 
+             position = position_dodge(width = 0.5)) +
+    scale_x_discrete(labels = labels[-1]) +
+    scale_fill_brewer(palette = "Set2", name = "Distribution",
+                      labels = c("Poisson", "Negative Binomial", "Log-normal",
+                                 "Normal", "Not Fit")) +
+    facet_wrap(~ RealData, nrow = length(unique(gofs$RealData)),
+               scale = "free_x") +
+    ggtitle("Gene goodness-of-fit") +
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.title.x = element_blank(),
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(size = 20),
+          legend.position = "bottom")
+
+ggsave("../additional/additional14_gene_gof.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../additional/additional14_gene_gof.png",
+       width = 20, height = 25, units = "cm")
+```
+
+Timings
+=======
+
+```{r get-timings}
+timings <- lapply(names(times), function(name) {
+    times[[name]] %>%
+        data.frame() %>%
+        rownames_to_column("Model") %>%
+        gather(key = "Type", value = "Time", -Model) %>%
+        mutate(Dataset = name)
+})
+
+timings <- bind_rows(timings)
+```
+
+```{r plot-timings}
+timings %>%
+    mutate(Model = factor(Model, levels = names(labels))) %>%
+    filter(!(Model == "SplatDrop" & Type == "Estimation")) %>%
+    filter(!(Model == "Lun2ZINB" & Type == "Estimation")) %>%
+    ggplot(aes(x = Model, y = Time, colour = Dataset)) +
+    geom_jitter(size = 3, width = 0.2, height = 0) +
+    scale_x_discrete(labels = labels[-1]) +
+    scale_colour_brewer(palette = "Dark2") +
+    scale_y_log10(labels = c("1 sec", "1 min", "1 hour", "1 day"),
+                  breaks = c(1, 60, 60 * 60, 24 * 60 * 60)) +
+    facet_wrap(~ Type, nrow = 2, scale = "free") +
+    ggtitle("Processing times (datasets)") +
+    ylab("Processing time") + 
+    theme(plot.title = element_text(size = 24, face = "bold", hjust = 0.4),
+          axis.title.x = element_blank(),
+          panel.grid.major.y = element_line(size = 0.1, colour = "grey"),
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(size = 20),
+          legend.position = "bottom")
+
+ggsave("../additional/additional11_timings.pdf",
+       width = 20, height = 25, units = "cm")
+ggsave("../additional/additional11_timings.png",
+       width = 20, height = 25, units = "cm")
+```
+
+Tung (filtered)
+===============
+
+```{r tung-filtered-sim, results = "hide"}
+counts.tung <- counts$Tung
+counts.tung <- counts.tung[rowMeans(counts.tung == 0) < 0.75, ]
+
+sims.tung <- simData(counts.tung, verbose = TRUE, bp = bp)
+```
+
+```{r tung-filtered-comp}
+comp.tung <- compareSCESets(sims.tung$Sims, point.size = 0.3)
+diff.tung <- diffSCESets(sims.tung$Sims, ref = "Real", point.size = 0.3)
+plt.tung <- makeOverallPanel(comp.tung, diff.tung, title = "Tung (filtered)")
+plt.tung
+
+save_plot("../additional/additional13_filtered.png", plt.tung,
+          ncol = 4, nrow = 7, base_height = 3)
 ```
 
 Session info
