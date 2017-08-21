@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/88401680.svg)](https://zenodo.org/badge/latestdoi/88401680)
+
 Splatter paper
 ==============
 
