@@ -66,9 +66,9 @@ dataset.
 ```{r real}
 root <- "../data"
 
-datasets <- read_tsv(file.path(root, "datasets.txt"),
-                     col_types = cols(.default = col_character(),
-                                      NumCells = col_integer()
+datasets <- readr::read_tsv(file.path(root, "datasets.txt"),
+                     col_types = readr::cols(.default = readr::col_character(),
+                                      NumCells = readr::col_integer()
                                       )
                      )
 
@@ -107,6 +107,8 @@ sims <- bplapply(1:20, function(seed) {
                                dropout.present = FALSE,
                                seed            = seed)
     sim <- calculateQCMetrics(sim)
+    # SC3 requires logcounts to be present
+    logcounts(sim) = log2(counts(sim) + 1)
     return(sim)
 }, BPPARAM = bp)
 ```
@@ -150,12 +152,13 @@ metrics <- sapply(1:length(sc3s), function(run) {
     sc3 <- sc3s[[run]]
     
     # Calculate clustering metrics using the clues package
-    truth <- as.numeric(factor(pData(sc3)$Group))
-    predicted <- pData(sc3)$sc3_3_clusters
-    clust.metrics <- adjustedRand(truth, predicted)
+    x = sc3$Group
+    truth = strtoi(substr(x, nchar(x), nchar(x)))
+    predicted <- sc3$sc3_3_clusters
+    predicted = as.vector(as.numeric(predicted))
+    clust.metrics <- adjustedRand(truth, predicted) 
     
-    # Calculate the gene identification metrics
-    gene.metrics <- fData(sc3) %>%
+    gene.metrics <- as_tibble(rowData(sc3)) %>%
         # SC3 automatically filters genes based on zeros so we don't want to
         # look at those
         filter(sc3_gene_filter == TRUE) %>%
@@ -178,7 +181,7 @@ metrics <- sapply(1:length(sc3s), function(run) {
         mutate(Mk_TP = Mk_True & Mk_Predicted) %>%
         mutate(Mk_TN = !Mk_True & !Mk_Predicted) %>%
         mutate(Mk_FP = !Mk_True & Mk_Predicted) %>%
-        mutate(Mk_FN = Mk_True & Mk_Predicted) %>%
+        mutate(Mk_FN = Mk_True & !Mk_Predicted) %>%
         # Keep only the DE and marker columns (drop all other values)
         select(starts_with("DE_"), starts_with("Mk_")) %>%
         summarise_each(funs(sum)) %>%
